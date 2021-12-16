@@ -1,0 +1,237 @@
+<!-- e2$timepoint_df <- e2$df %>% -->
+<!--   group_by(subj_id,detection,trial,timepoint) %>% -->
+<!--   summarise( -->
+<!--     detection = detection[side==1 & eccentricity == 1], -->
+<!--     bright_side = bright_side[side==1 & eccentricity == 1], -->
+<!--     signal = signal[side==1 & eccentricity == 1], -->
+<!--     response = response[side==1 & eccentricity == 1], -->
+<!--     RT = RT[side==1 & eccentricity == 1]-480, # stimulus duration -->
+<!--     confidence = confidence[side==1 & eccentricity == 1], -->
+<!--     correct = correct[side==1 & eccentricity == 1], -->
+<!--     trial_number = trial[side==1 & eccentricity == 1], -->
+<!--     conf_bi = ifelse( -->
+<!--       response==1,  -->
+<!--       as.numeric(confidence), -->
+<!--       -1*as.numeric(confidence)), -->
+<!--     luminance_0=mean(luminance[side==0]), -->
+<!--     luminance_1=mean(luminance[side==1])); -->
+
+e23 <- list()
+e23$discrimination_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==0)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(resp=mean(as.numeric(as.character(response))),
+            correct=mean(as.numeric(as.character(correct))),
+            n=n())%>%
+  filter(n>30);
+
+p1 <- e23$discrimination_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=resp))+
+  geom_tile(size=12)+
+  scale_fill_gradient2(low=discrimination_colors[1],mid='white',high=discrimination_colors[2], midpoint=0.5)+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination response')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+e23$detection_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==1)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(resp=mean(as.numeric(as.character(response))),
+            n=n())%>%
+  filter(n>30);
+
+p2 <- e23$detection_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=resp))+
+  geom_tile(size=12)+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0.5)+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection response')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+e23$discrimination_confidence_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==0 & correct==1)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(confidence=mean(confidence),
+            n=n())%>%
+  filter(n>30);
+
+p3 <- e23$discrimination_confidence_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=confidence))+
+  geom_tile(size=12)+
+  scale_fill_gradient(low='white',high='black')+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination confidence')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+e23$detection_confidence_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==1 & correct==1)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(confidence=mean(confidence),
+            response = response[1],
+            n=n())%>%
+  filter(n>30);
+
+p4 <- e23$detection_confidence_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=confidence))+
+  geom_tile(size=12)+
+  scale_fill_gradient(low='white',high='black')+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection confidence')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+e23$discrimination_stimulus_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==0)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(bright_side=mean(as.numeric(as.character(bright_side))),
+            n=n())%>%
+  filter(n>30);
+
+p5 <- e23$discrimination_stimulus_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=bright_side))+
+  geom_tile(size=12)+
+  scale_fill_gradient2(low=discrimination_colors[1],mid='white',high=discrimination_colors[2], midpoint=0.5)+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination posterior')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+e23$detection_stimulus_by_evidence <- e3$trial_df %>%
+  bind_rows(e2$trial_df) %>%
+  filter(detection==1)%>%
+  mutate(luminance_0=round(luminance_0)-128,
+         luminance_1=round(luminance_1)-128)%>%
+  group_by(luminance_0,luminance_1)%>%
+  summarise(signal=mean(as.numeric(as.character(signal))),
+            n=n())%>%
+  filter(n>30);
+
+p6 <- e23$detection_stimulus_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=signal))+
+  geom_tile(size=12)+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0.5)+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection posterior')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+
+p <- grid.arrange(p5, p6, p1, p2, p3, p4, nrow=3, heights=c(1,1,1))
+ggsave('figures/empirical_tile.png', p)
+
+p7 <- e23$discrimination_by_evidence %>%
+  ggplot(aes(x=luminance_0,y=luminance_1,fill=correct))+
+  geom_tile(size=12)+
+  scale_x_continuous(breaks=seq(-6,12,2))+
+  scale_y_continuous(breaks=seq(-6,12,2))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination response')+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 10/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 5, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 5, y0 = 0, r = 5/sqrt(7)), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+

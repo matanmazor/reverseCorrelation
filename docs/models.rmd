@@ -1,0 +1,838 @@
+
+```{r RC-load-pkgs, echo=FALSE, message=FALSE, include=FALSE}
+# List of packages required for this analysis
+pkg <- c("dplyr", "ggplot2", "knitr", "bookdown")
+# Check if packages are not installed and assign the
+# names of the packages not installed to the variable new.pkg
+new.pkg <- pkg[!(pkg %in% installed.packages())]
+# If there are any packages in the list that aren't installed,
+# install them
+if (length(new.pkg)) {
+  install.packages(new.pkg, repos = "https://cran.rstudio.com")
+}
+# Load packages
+
+library("papaja")
+r_refs("r-references.bib")
+library('tidyverse')
+library('cowplot')
+library('egg')
+library('RColorBrewer')
+library('reticulate') # for python
+library('ggforce')
+```
+
+
+```{python model-definitions, echo=FALSE, message=FALSE, warning=FALSE}
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+from scipy.stats import norm
+from scipy.stats import poisson
+import statsmodels.formula.api as sm
+import warnings
+warnings.filterwarnings('ignore')
+
+np.random.seed(1)
+
+class Model:
+    def __init__(self, mu, sigma, noise_factor):
+        
+        self.df = pd.DataFrame()
+        self.mu = mu
+        self.sigma = sigma
+        self.noise_factor = noise_factor
+        
+        # if noise factor > 0, approximate density function
+        # with grid.
+        if noise_factor > 0:
+        
+          X = np.arange(-100,100,0.1)
+          Xboundaries = np.arange(-100,100.1,0.1)-0.05
+          marginal_signal=[0]*len(X)
+          marginal_noise=[0]*len(X)
+          
+          for x in X:
+            conditional = stats.norm(x,self.noise_factor**x).pdf(X);
+            prior_noise = stats.norm(self.mu[0],self.sigma[0]).pdf(x)
+            prior_signal = stats.norm(self.mu[1],self.sigma[1]).pdf(x)
+            marginal_noise = [p+conditional[i]*prior_noise 
+                              for i,p in enumerate(marginal_noise)];
+            marginal_signal = [p+conditional[i]*prior_signal 
+                               for i,p in enumerate(marginal_signal)];
+
+          
+          self.signal_dist = stats.rv_histogram(
+              (np.array(marginal_signal),Xboundaries));
+
+          self.noise_dist = stats.rv_histogram(
+              (np.array(marginal_noise),Xboundaries));
+
+        # else, use normal distributions.
+        else:
+          self.signal_dist = stats.norm(self.mu[1],self.sigma[1]);
+          self.noise_dist = stats.norm(self.mu[0],self.sigma[0])
+      
+    def runModel(self, num_trials):
+
+        # first, decide which is the true direction in each trial (p=0.5)
+        self.df['direction'] = ['r' if flip else 'l' 
+                                for flip in np.random.binomial(1,0.5,num_trials)] 
+
+        self.getMotionEnergy()
+        
+        self.extractLLR()
+
+        self.makeDecision()
+
+        self.rateConfidence()
+        
+        self.df['correct'] = self.df.apply(lambda row: 
+                                           row.direction==row.decision, axis=1)
+        
+        #energy in chosen direction
+        self.df['E_c'] = self.df.apply(lambda row: 
+                                       row.E_r if row.decision=='r' 
+                                       else row.E_l, axis=1)
+        
+        #energy in unchosen direction
+        self.df['E_u'] = self.df.apply(lambda row: 
+                                       row.E_l if row.decision=='r' 
+                                       else row.E_r, axis=1)
+    
+    def runModelForSpecifiedValues(self, specified_values, repetitions=1):
+
+        # no direction here
+        self.df['direction'] = ['x']*len(specified_values)**2*repetitions
+        
+        self.df['E_r'] = specified_values*len(specified_values)*repetitions;
+        
+        self.df['E_l'] = list(np.repeat(
+            specified_values,len(specified_values)))*repetitions;
+        
+        # how it appears to subjects
+        if self.noise_factor>0:
+          self.df['E_ra'] = self.df.apply(lambda row: row.E_r +
+                        np.random.normal(0, self.noise_factor**row.E_r), 
+                        axis=1);
+
+          self.df['E_la'] = self.df.apply(lambda row: row.E_l +
+                        np.random.normal(0, self.noise_factor**row.E_l), 
+                        axis=1);
+        else:
+          self.df['E_ra']=self.df['E_r'];
+          self.df['E_la']=self.df['E_l'];
+
+        self.extractLLR()
+
+        self.makeDecision()
+
+        self.rateConfidence()
+        
+        self.df['correct'] = self.df.apply(lambda row: 
+                                           row.direction==row.decision, axis=1)
+        
+        #energy in chosen direction
+        self.df['E_c'] = self.df.apply(lambda row: 
+                                       row.E_r if row.decision=='r' 
+                                       else row.E_l, axis=1)
+        
+        #energy in unchosen direction
+        self.df['E_u'] = self.df.apply(lambda row: 
+                                       row.E_l if row.decision=='r' 
+                                       else row.E_r, axis=1)
+        
+    def getMotionEnergy(self):
+    # sample the motion energy for left and right as a function of the true direction
+        self.df['E_r'] = self.df.apply(lambda row: 
+                      np.random.normal(self.mu[1],self.sigma[1]) 
+                      if row.direction=='r' 
+                      else np.random.normal(self.mu[0],self.sigma[0]),
+                      axis=1)
+
+        self.df['E_l'] = self.df.apply(lambda row: 
+                      np.random.normal(self.mu[1],self.sigma[1]) 
+                      if row.direction=='l' 
+                      else np.random.normal(self.mu[0],self.sigma[0]),
+                      axis=1)
+        
+        # how it appears to subjects
+        if self.noise_factor>0:
+          self.df['E_ra'] = self.df.apply(lambda row: row.E_r +
+                        np.random.normal(0, self.noise_factor**row.E_r), 
+                        axis=1);
+          self.df['E_la'] =  self.df.apply(lambda row: row.E_l +
+                        np.random.normal(0, self.noise_factor**row.E_l), 
+                        axis=1)
+        else:
+          self.df['E_ra']=self.df['E_r'];
+          self.df['E_la']=self.df['E_l'];
+    
+    def extractLLR(self):
+        
+        # extract the Log Likelihood Ratio (LLR) 
+        #log(p(Er|r))-log(p(Er|l)) + log(p(El|r))-log(p(El|l))
+        self.df['LLR'] = self.df.apply(lambda row: 
+                            np.log(self.signal_dist.pdf(row.E_ra))- 
+                            np.log(self.noise_dist.pdf(row.E_ra)) + 
+                            np.log(self.noise_dist.pdf(row.E_la))- 
+                            np.log(self.signal_dist.pdf(row.E_la)), axis=1)
+    def makeDecision(self):
+        
+        # we assume that our participant chooses the direction associated 
+        # with higher likelihood
+        self.df['decision'] =  self.df.apply(lambda row: 
+                                             'r' if row.LLR>0 else 'l', 
+                                             axis=1)
+        
+    def rateConfidence(self):
+        
+        # and rates their confidence in proportion to the absolute LLR
+        self.df['confidence'] = abs(self.df['LLR'])
+        
+
+class DetectionModel(Model):
+    
+    def runModel(self, num_trials):
+
+        # first, decide which is the true direction in each trial (p=0.5)
+        self.df['direction'] = ['r' if flip else 'l' 
+                                for flip in np.random.binomial(1,0.5,num_trials)] 
+        
+        # decide whether motion is present or absent.
+        self.df['motion'] = ['p' if flip else 'a' 
+                             for flip in np.random.binomial(1,0.5,num_trials)] 
+        
+        self.getMotionEnergy()
+        
+        self.extractLLR()
+
+        self.makeDecision()
+
+        self.rateConfidence()
+        
+        self.df['correct'] = self.df.apply(lambda row: 
+                                           row.motion==row.decision, 
+                                           axis=1)
+        
+         #energy in true direction
+        self.df['E_t'] = self.df.apply(lambda row: 
+                                       row.E_r if row.direction=='r' 
+                                       else row.E_l, 
+                                       axis=1)
+        
+        #energy in opposite direction
+        self.df['E_o'] = self.df.apply(lambda row: 
+                                       row.E_l if row.direction=='r' 
+                                       else row.E_r, 
+                                       axis=1)
+        
+    def runModelForSpecifiedValues(self, specified_values, repetitions=1):
+
+        # no direction/motion here
+        self.df['direction'] = ['x']*len(specified_values)**2*repetitions
+        self.df['motion'] = ['x']*len(specified_values)**2*repetitions
+
+        self.df['E_r'] = specified_values*len(specified_values)*repetitions;
+        self.df['E_l'] = list(np.repeat(
+            specified_values,len(specified_values)))*repetitions;
+        
+        # how it appears to subjects
+        if self.noise_factor>0:
+          self.df['E_ra'] = self.df.apply(lambda row: row.E_r +
+                        np.random.normal(0, self.noise_factor**row.E_r), 
+                        axis=1);
+          self.df['E_la'] = self.df.apply(lambda row: row.E_l +
+                        np.random.normal(0, self.noise_factor**row.E_l), 
+                        axis=1)
+        else:
+          self.df['E_ra']=self.df['E_r'];
+          self.df['E_la']=self.df['E_l'];
+
+        self.extractLLR()
+
+        self.makeDecision()
+
+        self.rateConfidence()
+        
+        self.df['correct'] = self.df.apply(lambda row: row.motion==row.decision, axis=1)
+
+    def getMotionEnergy(self):
+    # sample the motion energy for left and right as a function of the true direction
+        self.df['E_r'] = self.df.apply(lambda row: 
+                      np.random.normal(self.mu[1],self.sigma[1]) 
+                      if row.direction=='r' and row.motion=='p'
+                      else np.random.normal(self.mu[0],self.sigma[0]),
+                      axis=1)
+
+        self.df['E_l'] = self.df.apply(lambda row: 
+                      np.random.normal(self.mu[1],self.sigma[1]) 
+                      if row.direction=='l' and row.motion=='p'
+                      else np.random.normal(self.mu[0],self.sigma[0]),
+                      axis=1)
+       
+        # how it appears to subjects
+        if self.noise_factor>0:
+          self.df['E_ra'] = self.df.apply(lambda row: row.E_r +
+                        np.random.normal(0, self.noise_factor**row.E_r), 
+                        axis=1);
+          self.df['E_la'] = self.df.apply(lambda row: row.E_l +
+                        np.random.normal(0, self.noise_factor**row.E_l), 
+                        axis=1)
+        else:
+          self.df['E_ra']=self.df['E_r'];
+          self.df['E_la']=self.df['E_l'];
+    
+    def extractLLR(self):
+        
+        self.df['LLR'] = self.df.apply(lambda row: 
+                            np.log(0.5*self.signal_dist.pdf(row.E_ra)* 
+                            self.noise_dist.pdf(row.E_la) + 
+                            0.5*self.signal_dist.pdf(row.E_la)* 
+                            self.noise_dist.pdf(row.E_ra)) - 
+                            np.log(self.noise_dist.pdf(row.E_la) * 
+                            self.noise_dist.pdf(row.E_ra)), 
+                            axis=1)
+    def makeDecision(self):
+        
+        # we assume that our participant just chooses the option associated with higher likelihood
+        self.df['decision'] =  self.df.apply(lambda row: 
+                                             'p' if row.LLR>0 
+                                             else 'a', 
+                                             axis=1)
+        
+    def rateConfidence(self):
+        
+        # and rates their confidence in proportion to the absolute LLR
+        self.df['confidence'] = abs(self.df['LLR'])
+```
+
+
+```{python}
+model1Dis = Model(mu=[0,1],sigma=[1,1], noise_factor=0)
+model1Dis.runModelForSpecifiedValues(specified_values=list(np.arange(-1.2,2.2,0.1)),repetitions=1)
+```
+
+```{python}
+model1Det = DetectionModel(mu=[0,1],sigma=[1,1], noise_factor=0)
+model1Det.runModelForSpecifiedValues(specified_values=list(np.arange(-1.2,2.2,0.1)),repetitions=1)
+```
+
+```{python}
+model2Dis = Model(mu=[0,1],sigma=[1,1], noise_factor=2)
+model2Dis.runModelForSpecifiedValues(specified_values=list(np.arange(-1.2,2.2,0.2)),repetitions=100)
+```
+
+```{python}
+model2Det = DetectionModel(mu=[0,1],sigma=[1,1], noise_factor=2)
+model2Det.runModelForSpecifiedValues(specified_values=list(np.arange(-1.2,2.2,0.1)),repetitions=200)
+```
+
+```{python}
+model3Dis = Model(mu=[0,1],sigma=[1,1], noise_factor=1.2)
+model3Dis.runModelForSpecifiedValues(specified_values=list(np.arange(-1.2,2.2,0.2)),repetitions=100)
+```
+
+```{r plot-figs1}
+
+detection_colors = c('#377eb8', '#e41a1c');
+discrimination_colors = c('#4daf4a','#984ea3')
+
+p0 <- py$model1Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low='white',mid='white',high='white', midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title=' ')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_hline(yintercept=0, color='#dbdcdc')+
+  geom_vline(xintercept=0, color='#dbdcdc')+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+);
+
+p1 <- py$model1Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=discrimination_colors[2],mid='white',high=discrimination_colors[1], midpoint=0)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+
+p2 <- py$model1Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p0, p1, p2, nrow=1)
+ggsave('figures/2dmodel_tile.png', p, width=15,dpi=300);
+
+x0 <- c(1,0);
+y0 <- c(0,1);
+se_x <- 2^x0;
+se_y <- 2^y0;
+xmin <- x0-se_x;
+xmax <- x0+se_x;
+ymin <- y0-se_y;
+ymax <- y0+se_y;
+
+sensory_noise_df <- data.frame(x0,y0,xmin,xmax,ymin,ymax);
+
+psn <- sensory_noise_df %>% 
+  ggplot(aes(x=x0,y=y0,
+         xmin=xmin,xmax=xmax,
+         ymin=ymin,ymax=ymax
+         )) +
+  geom_point() +
+  geom_errorbar() +
+  geom_errorbarh()+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)+
+  labs(x='evidence for S2',y='evidence for S1',title='Sensory noise')
+
+
+
+p3 <- py$model2Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence*4,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+  ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=discrimination_colors[2],mid='white',high=discrimination_colors[1], midpoint=0)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p4 <- py$model2Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence*4,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p3, p4, nrow=1)
+ggsave('figures/noise_dependent_model_tile.png', p, width=10,dpi=300);
+```
+```{r plot-figs2}
+
+detection_colors = c('#377eb8', '#e41a1c');
+discrimination_colors = c('#4daf4a','#984ea3')
+
+p0 <- py$model1Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low='white',mid='white',high='white', midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title=' ')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1, color='#dbdcdc')+
+  geom_hline(yintercept=0, color='#dbdcdc')+
+  geom_vline(xintercept=0, color='#dbdcdc')+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+);
+
+p1 <- py$model1Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=discrimination_colors[2],mid='white',high=discrimination_colors[1], midpoint=0)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+
+p2 <- py$model1Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p0, p1, p2, nrow=1)
+ggsave('figures/2dmodel_tile.png', p, width=15,dpi=300);
+
+x0 <- c(1,0);
+y0 <- c(0,1);
+se_x <- 2^x0;
+se_y <- 2^y0;
+xmin <- x0-se_x;
+xmax <- x0+se_x;
+ymin <- y0-se_y;
+ymax <- y0+se_y;
+
+sensory_noise_df <- data.frame(x0,y0,xmin,xmax,ymin,ymax);
+
+psn <- sensory_noise_df %>% 
+  ggplot(aes(x=x0,y=y0,
+         xmin=xmin,xmax=xmax,
+         ymin=ymin,ymax=ymax
+         )) +
+  geom_point() +
+  geom_errorbar() +
+  geom_errorbarh()+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)+
+  labs(x='evidence for S2',y='evidence for S1',title='Sensory noise')
+
+
+
+p3 <- py$model3Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(decision=mean(decision=='r')) %>% 
+  ggplot(aes(x=E_r,y=E_l,fill=decision)) +
+  geom_tile()+
+  scale_fill_gradient2(low=discrimination_colors[2],mid='white',high=discrimination_colors[1], midpoint=0.5)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p4 <- py$model2Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence*4,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p3, p4, nrow=1)
+ggsave('figures/noise_dependent_model_tile.png', p, width=10,dpi=300);
+```
+
+```{r plot-figs3}
+
+detection_colors = c('#377eb8', '#e41a1c');
+discrimination_colors = c('#4daf4a','#984ea3')
+
+
+p1 <- py$model2Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(decision=mean(ifelse(decision=='r',1,0)),
+            correct=ifelse(E_r>E_l,decision,1-decision)) %>% 
+            ggplot(aes(x=E_r,y=E_l,fill=correct)) +
+  geom_tile()+
+  scale_fill_gradient2(low='black',high='white', midpoint=0.5)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+
+p2 <- py$model1Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p0, p1, p2, nrow=1)
+ggsave('figures/2dmodel_tile.png', p, width=15,dpi=300);
+
+x0 <- c(1,0);
+y0 <- c(0,1);
+se_x <- 2^x0;
+se_y <- 2^y0;
+xmin <- x0-se_x;
+xmax <- x0+se_x;
+ymin <- y0-se_y;
+ymax <- y0+se_y;
+
+sensory_noise_df <- data.frame(x0,y0,xmin,xmax,ymin,ymax);
+
+psn <- sensory_noise_df %>% 
+  ggplot(aes(x=x0,y=y0,
+         xmin=xmin,xmax=xmax,
+         ymin=ymin,ymax=ymax
+         )) +
+  geom_point() +
+  geom_errorbar() +
+  geom_errorbarh()+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)+
+  labs(x='evidence for S2',y='evidence for S1',title='Sensory noise')
+
+
+
+p3 <- py$model3Dis$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(decision=mean(decision=='r')) %>% 
+  ggplot(aes(x=E_r,y=E_l,fill=decision)) +
+  geom_tile()+
+  scale_fill_gradient2(low=discrimination_colors[2],mid='white',high=discrimination_colors[1], midpoint=0.5)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Discrimination')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p4 <- py$model2Det$df %>%
+  filter(is.finite(confidence)) %>%
+  group_by(E_r,E_l) %>%
+  summarise(confidence=ceiling(mean(confidence*4,na.omit=TRUE)),
+            sign=sign(mean(LLR,na.omit=TRUE))) %>% 
+  mutate(LLR=confidence*sign)%>%
+            ggplot(aes(x=E_r,y=E_l,fill=LLR)) +
+  geom_tile()+
+  scale_fill_gradient2(low=detection_colors[2],mid='white',high=detection_colors[1], midpoint=0)+    scale_x_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  scale_y_continuous(breaks=c(-2,-1,0,1,2,3,4))+
+  labs(x='evidence for S2',y='evidence for S1',title='Detection')+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 1, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 1, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), inherit.aes = FALSE, size=1)+
+  geom_circle(aes(x0 = 0, y0 = 0, r = 0.5), inherit.aes = FALSE, size=1)+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  coord_fixed(ratio=1)+
+  theme_classic()+
+  theme(legend.position='none',
+  plot.title = element_text(size=22),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+)
+
+p <- grid.arrange(p3, p4, nrow=1)
+ggsave('figures/noise_dependent_model_tile.png', p, width=10,dpi=300);
+```
