@@ -6,3 +6,10 @@ Raw data from all three experiments is available on the project's OSF repository
 
 ## Analysis Scripts
 Analysis scripts (in R) are available in the ['docs'](https://github.com/matanmazor/reverseCorrelation/blob/main/docs/reverseCorrelationPaper.Rmd) subdirectory. 
+
+## Experiment demos
+
+You can try Experiment 2 by clicking [here](https://matanmazor.github.io/reverseCorrelation/experiments/demos/Experiment2/)
+
+You can try Experiment 3 by clicking [here](https://matanmazor.github.io/reverseCorrelation/experiments/demos/Experiment3/)
+
