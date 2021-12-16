@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Flickering Squares</title>
+        <script src="jspsych-6.1.0/jspsych.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-flicker.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-p5text.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-call-function.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-survey-text.js"></script>
+        <script src="p5/p5.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Corben&family=Quicksand&display=swap" rel="stylesheet">
+        <link href="style.css" rel="stylesheet" type="text/css"></link>
+        <!-- <link href="jspsych-6.0.4/css/jspsych.css" rel="stylesheet" type="text/css"></link> -->
+
+        <!-- <link href="jspsych-6.0.4/css/jspsych.css" rel="stylesheet" type="text/css"></link> -->
+    </head>
+    <body></body>
+    <script>
+
+      const std = 10;
+      const delta = 5;
+      const trials_per_block = 40;
+
+      timeline = [];
+
+      var welcome = {
+        type: "p5Text",
+        title: 'Welcome!',
+        text: "In this experiment, you will look for tiny differfences in the average "+
+        "brightness of flickering squares. You will also rate your confidence " +
+        "in your decisions. The experiment consists of 6 parts + some instructions "+
+        "and practice trials, and should take about 30 minutes to complete."
+      };
+      timeline.push(welcome);
+
+      var keyFlashFunc = function(p, trial) {
+        var keyCode=p.keyCode
+        if (keyCode==70) {
+          trial.flickering_frame = 0
+          trial.luminance = [];
+          for (i=0; i<12; i++) {
+            trial.luminance[i] = p.round(p.randomGaussian(128,std))
+          }
+          trial.luminance[12] = 128;
+        }
+        if (keyCode==66) {
+          trial.bright_flickering_frame = 0
+          trial.bright_luminance = [];
+          for (i=0; i<12; i++) {
+            trial.bright_luminance[i] = p.round(p.randomGaussian(128+delta,std))
+          }
+          trial.bright_luminance[12] = 128;
+        }
+      }
+
+      var drawFlashFunc = function(p, trial) {
+        if (trial.flickering_frame > -1) {
+            p.push()
+            // draw left square
+            p.strokeWeight(0)
+            p.fill(trial.luminance[trial.flickering_frame]);
+            p.rect(p.width/2+280, 320, 50, 50);
+            p.pop()
+            trial.flickering_frame++
+            if (trial.flickering_frame>12) {
+              trial.flickering_frame=undefined;
+            }
+        }
+        if (trial.bright_flickering_frame > -1) {
+            p.push()
+            // draw left square
+            p.strokeWeight(0)
+            p.fill(trial.bright_luminance[trial.bright_flickering_frame]);
+            p.rect(p.width/2+280, 320, 50, 50);
+            p.pop()
+            trial.bright_flickering_frame++
+            if (trial.bright_flickering_frame>12) {
+              trial.bright_flickering_frame=undefined;
+            }
+        }
+      }
+
+      var introduce_squares = {
+        type: "p5Text",
+        title: 'Flickering Squares',
+        text: "Flickering squares are gray squares that change"+
+        " brightness very rapidly (40 times a second)." +
+        "\nThe average brightness of a flickering square is dark gray, just like the background.\n" +
+        "Press F to see a flickering square. (You can try this several times).",
+        key_function: keyFlashFunc,
+        draw_function: drawFlashFunc
+      };
+      timeline.push(introduce_squares)
+
+      var introduce_bright = {
+        type: "p5Text",
+        title: 'Bright Flickering Squares',
+        text: "Bright flickering squares are similar to ordinary flickering squares, except that" +
+        " on average they are a tiny bit brighter compared to the background.\n" +
+        "Press B to see a Bright flickering square and F to see an ordinary flickering square.",
+        key_function: keyFlashFunc,
+        draw_function: drawFlashFunc
+      };
+      timeline.push(introduce_bright)
+
+      var introduce_discrimination = {
+        type: "p5Text",
+        title: 'Your First Challenge',
+        text: "In the first part of the experiment, you will see pairs of " +
+        "flickering squares side by side. One will be an ordinary flickering square and the " +
+        "other bright. Your task is to pay close attention and tell which is which."
+      };
+      timeline.push(introduce_discrimination)
+
+      var lets_practice_discrimination = {
+        type: "p5Text",
+        title: 'Your First Challenge',
+        text: "Lets start with 4 practice trials. \n" +
+        "Press F if the bright square was on the right and D if it was " +
+        "on the left. The bright squares will be extra-bright for these first "+
+        "practice trials, but don't get used to it -- things will become more "+
+        "challenging soon."
+      };
+      timeline.push(lets_practice_discrimination)
+
+      var dis_stimulus = {
+        type: "flicker",
+        choices: ['d','f'],
+        bright_side: jsPsych.timelineVariable('bright_side'),
+        std: std,
+        delta: delta,
+        rate_confidence: jsPsych.timelineVariable('rate_confidence'),
+        give_confidence_feedback:  jsPsych.timelineVariable('give_confidence_feedback'),
+        on_finish: function(data){
+          data.correct = data.response == data.correct_response;
+        },
+        data: jsPsych.timelineVariable('data')
+      };
+
+      var dis_practice_stimuli = [
+        { bright_side: "right", rate_confidence: false, delta: delta*2,
+            data: { test_part: 'practice', correct_response: 'f' } },
+        { bright_side: "left", rate_confidence: false, delta: delta*2,
+            data: { test_part: 'practice', correct_response: 'd' } }
+      ];
+
+      var dis_practice_procedure = {
+        timeline: [dis_stimulus],
+        timeline_variables: dis_practice_stimuli,
+        repetitions: 2,
+        randomize_order: true
+      }
+
+      var dis_practice_feedback = {
+        type: "p5Text",
+        text: function() {
+
+          var trials = jsPsych.data.get().last(4).filter({test_part: 'practice'});
+          var num_correct = trials.filter({correct: true}).count();
+
+          if (num_correct>2) {
+          return "Excellent, you responded correctly on "+num_correct+" out "+
+          "of 4 trials. There's one more bit of explanation before we can move on to the "+
+          "actual experiment."
+          } else {
+            return "This time you responded correctly on "+num_correct+" out "+
+          "of 4 trials. Let's do 4 more practice trials. Press D if the bright " +
+          "square was on the left and F if it was on the left."
+          }
+        }
+      }
+
+      var dis_practice_loop_node = {
+          timeline: [dis_practice_procedure,dis_practice_feedback],
+          loop_function: function(data){
+              // get the data from the previous trial,
+              // and check which key was pressed
+              var trials = data.filter({test_part: 'practice'});
+              var num_correct = trials.filter({correct: true}).count();
+              if(num_correct>2){
+                  return false;
+              } else {
+                  return true;
+              }
+          }
+      }
+      timeline.push(dis_practice_loop_node)
+
+      var lets_practice_confidence = {
+        type: "p5Text",
+        title: 'Confidence Ratings',
+        text: "Immediately after you decide which was the bright square " +
+        "you will indicate your confidence in your decision. You will do " +
+        "this by controlling the size of a colored circle with your mouse: "+
+        "a large circle means you are certain that you got it right, and a small "+
+        "circle means there's a good chance you might be wrong.\n"+
+        "Let's practice this before we start the actual experiment."
+      };
+      timeline.push(lets_practice_confidence)
+
+      var conf_practice_stimuli = [
+        { bright_side: "right",
+          data: { test_part: 'practice', correct_response: 'f' } },
+        { bright_side: "left",
+          data: { test_part: 'practice', correct_response: 'd' } }
+      ];
+
+      var conf_practice_procedure = {
+        timeline: [dis_stimulus],
+        timeline_variables: conf_practice_stimuli,
+        repetitions: 2,
+        randomize_order: true,
+      }
+
+      timeline.push(conf_practice_procedure)
+      var discrimination_in_your_words = {
+        type: 'survey-text',
+        preamble: '<h1>Now in your words<h1>',
+        questions: [{
+        prompt: "To make sure everything is clear we would like you to describe "+
+        "the experiment in your own words. Which keys do you press, and when? " +
+        "How do you rate your confidence in your decisions? Be as detailed as possible.",
+        pleaceholder: "your response here",
+        rows:8,
+        columns:60,
+        name: 'discrimination explained'
+      }]
+      }
+      timeline.push(discrimination_in_your_words)
+
+      window.block_number = 1;
+
+      var starting_experiment = {
+        type: "p5Text",
+        title: 'Part 1 out of 6',
+        text: "We are now ready to start the first part of the experiment."
+      };
+      timeline.push(starting_experiment)
+
+      // DISCRIMINATION
+
+      var start_dis = {
+        type: "p5Text",
+        title: function() {return 'Part '+window.block_number+ ' out of 6'},
+        text: "Indicate which flickering square was bright "+
+        "using your keyboard (D for left and F for right), and " +
+        "rate your confidence by controlling the size of the circle. This part "+
+        "has 40 repetitions and should take about three and a half minutes to complete.",
+        draw_function: function(p, trial) {
+          p.push()
+          p.fill(150);
+          p.stroke(255);
+          p.strokeWeight(2);
+          p.rect(p.width/2+330, p.height/2+50, 70, 70);
+          p.rect(p.width/2+400, p.height/2+50, 70, 70);
+          p.fill(45,120,210)
+          p.circle(p.width/2+400,p.height/2-150,80)
+          p.fill(210,40,45)
+          p.circle(p.width/2+400,p.height/2-80,20)
+          p.fill(255)
+          p.textSize(60);
+          p.textAlign(p.CENTER, p.CENTER)
+          p.strokeWeight(0);
+          p.text('F',p.width/2+435, p.height/2+90)
+          p.text('D',p.width/2+365, p.height/2+90)
+          p.textSize(15);
+          p.fill(0)
+          p.text('Bright on right',p.width/2+470, p.height/2+30)
+          p.text('Bright on left',p.width/2+330, p.height/2+30)
+          p.text('Highest confidence',p.width/2+400, p.height/2-200)
+          p.text('Lowest confidence',p.width/2+400, p.height/2-50)
+
+          p.pop()
+
+        }
+      };
+      timeline.push(start_dis);
+
+      var dis_test_stimuli = [
+        { bright_side: "right", delta: delta, rate_confidence: true,
+          data: { test_part: 'test', correct_response: 'f' } },
+        { bright_side: "left", delta: delta, rate_confidence: true,
+          data: { test_part: 'test', correct_response: 'd' } }
+      ];
+
+      var dis_test_procedure = {
+        timeline: [dis_stimulus],
+        timeline_variables: dis_test_stimuli,
+        repetitions: trials_per_block/2,
+        randomize_order: true
+        }
+
+      var update_block_number = {
+        type: 'call-function',
+        func: function() {
+        window.block_number++
+        console.log(window.block_number)
+        }
+      }
+
+      timeline.push(dis_test_procedure, update_block_number);
+
+      var take_a_break = {
+        type: "p5Text",
+        text: "You can now take a short break. Press Space when you are ready " +
+              "to continue.",
+        footer: ''
+      };
+      timeline.push(take_a_break);
+
+      var introduce_det_1 = {
+        type: "p5Text",
+        title: "Your Second Challenge",
+        text: "In the first part of the experiment you decided which of two " +
+              "flickering squares was bright. In the next challenge, on half "+
+              "of the trials exactly one of the squares will be bright, just " +
+              "like before. On the other half however they will both be ordinary."
+
+      };
+      timeline.push(introduce_det_1);
+
+      var introduce_det_2 = {
+        type: "p5Text",
+        title: "Your Second Challenge",
+        text:  "Your challenge is to tell whether one of the squares was bright.\n" +
+        "Remember that the bright square can " +
+          "appear on both sides (right or left), and that on " +
+          "exactly half of the trials both squares will be ordinary. "
+      };
+      timeline.push(introduce_det_2);
+
+      var introduce_det_practice = {
+        type: "p5Text",
+        text: "Let's practice this new challenge. Press T if you think one square was " +
+              "bright and G if both were ordinary. We'll do 4 trials, with " +
+              "confidence ratings as before. Here also, the size of the circle should indicate "+
+              "how confident you are in your decision."
+      };
+      timeline.push(introduce_det_practice);
+
+      var det_stimulus = {
+        type: "flicker",
+        choices: ['t','g'],
+        detection: true,
+        signal_presence: jsPsych.timelineVariable('signal_presence'),
+        bright_side: jsPsych.timelineVariable('bright_side'),
+        std: std,
+        delta: delta,
+        on_finish: function(data){
+          data.correct = data.response == data.correct_response;
+        },
+        data: jsPsych.timelineVariable('data')
+      };
+
+      var det_practice_stimuli = [
+        { bright_side: "right", signal_presence: true,
+          data: { test_part: 'practice', correct_response: 't' } },
+        { bright_side: "left", signal_presence: true,
+          data: { test_part: 'practice', correct_response: 't' } },
+        { bright_side: "right", signal_presence: false,
+          data: { test_part: 'practice', correct_response: 'g' } },
+        { bright_side: "left", signal_presence: false,
+          data: { test_part: 'practice', correct_response: 'g' } }
+      ];
+
+      var det_practice_procedure = {
+        timeline: [det_stimulus],
+        timeline_variables: det_practice_stimuli,
+        randomize_order: true
+      }
+
+      var det_practice_feedback = {
+        type: "p5Text",
+        text: function() {
+
+          var trials = jsPsych.data.get().last(4).filter({test_part: 'practice'});
+          var num_correct = trials.filter({correct: true}).count();
+
+          if (num_correct>2) {
+          return "Excellent, you responded correctly on "+num_correct+" out "+
+          "of 4 trials."
+          } else {
+            return "This time you responded correctly on "+num_correct+" out "+
+          "of 4 trials. Let's do 4 more practice trials. Press T if you think " +
+          "one of the squares was bright and G if both were ordinary."
+          }
+        }
+      }
+
+      var det_practice_loop_node = {
+          timeline: [det_practice_procedure,det_practice_feedback],
+          loop_function: function(data){
+              // get the data from the previous trial,
+              // and check which key was pressed
+              var trials = data.filter({test_part: 'practice'});
+              var num_correct = trials.filter({correct: true}).count();
+              if(num_correct>2){
+                  return false;
+              } else {
+                  return true;
+              }
+          }
+      }
+      timeline.push(det_practice_loop_node)
+
+      var detection_in_your_words = {
+        type: 'survey-text',
+        preamble: '<h1>Now in your words<h1>',
+        questions: [{
+        prompt: "To make sure everything is clear we would like you to describe "+
+        "this second challenge in your own words. Which keys do you press, and when? " +
+        "In what way is this challenge different from the first one? Be as detailed as possible.",
+        pleaceholder: "your response here",
+        rows:8,
+        columns:60,
+        name: 'detection explained'
+      }]
+      }
+      timeline.push(detection_in_your_words)
+
+      var start_det = {
+        type: "p5Text",
+        title: function() {return 'Part '+window.block_number+ ' out of 6'},
+        text: "Indicate whether exactly one of the flickering squares was bright (T key) "+
+        "or whether both were ordinary (G key), and " +
+        "rate your confidence by controlling the size of the circle. This part "+
+        "has 40 repetitions and should take about three and a half minutes to complete.",
+        draw_function: function(p, trial) {
+          p.push()
+          p.fill(150);
+          p.stroke(255);
+          p.strokeWeight(2);
+          p.rect(p.width/2+365, p.height/2, 70, 70);
+          p.rect(p.width/2+365, p.height/2+70, 70, 70);
+          p.fill(45,120,210)
+          p.circle(p.width/2+400,p.height/2-150,80)
+          p.fill(210,40,45)
+          p.circle(p.width/2+400,p.height/2-80,20)
+          p.fill(255)
+          p.textSize(60);
+          p.textAlign(p.CENTER, p.CENTER)
+          p.strokeWeight(0);
+          p.text('T',p.width/2+400, p.height/2+35)
+          p.text('G',p.width/2+400, p.height/2+105)
+          p.textSize(15);
+          p.fill(0)
+          p.text('One bright',p.width/2+400, p.height/2-15)
+          p.text('Both ordinary',p.width/2+400, p.height/2+155)
+          p.text('Highest confidence',p.width/2+400, p.height/2-200)
+          p.text('Lowest confidence',p.width/2+400, p.height/2-50)
+
+          p.pop()
+
+        }
+      }
+      timeline.push(start_det);
+
+      var det_test_stimuli = [
+        { bright_side: "right", signal_presence: true,
+          data: { test_part: 'test', correct_response: 't' } },
+        { bright_side: "left", signal_presence: true,
+          data: { test_part: 'test', correct_response: 't' } },
+        { bright_side: "right", signal_presence: false,
+          data: { test_part: 'test', correct_response: 'g' } },
+        { bright_side: "left", signal_presence: false,
+          data: { test_part: 'test', correct_response: 'g' } }
+      ];
+
+      var det_test_procedure = {
+        timeline: [det_stimulus],
+        timeline_variables: det_test_stimuli,
+        repetitions: trials_per_block/4,
+        randomize_order: true
+        }
+      timeline.push(det_test_procedure,update_block_number);
+
+      var debrief_block = {
+        type: "p5Text",
+        text: function() {
+
+          var trials = jsPsych.data.get().last(trials_per_block*2).filter({test_part: 'test'});
+          var correct_trials = trials.filter({correct: true});
+          var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+          var confidence = Math.round(correct_trials.select('confidence').mean()*100);
+
+          return "You responded correctly on "+accuracy+"% of the trials.\n" +
+          "Your average confidence level was "+confidence+" on a scale of 0 " +
+          "to 100. You can now take a short break before we continue."
+        }
+      };
+      timeline.push(debrief_block);
+
+      main_loop = {
+        timeline: [start_dis, dis_test_procedure, update_block_number, take_a_break,
+                  start_det, det_test_procedure, update_block_number, debrief_block],
+        repetitions:  2
+       }
+
+      main_if_node = {
+        timeline: [main_loop],
+        conditional_function: function() {
+          var all_trials = jsPsych.data.get().last(trials_per_block*2).filter({test_part: 'test'})
+          var detection_trials = all_trials.last(trials_per_block);
+          var discrimination_trials = all_trials.first(trials_per_block);
+          var detection_acc = detection_trials.filter({correct:true}).count()/trials_per_block;
+          var discrimination_acc = discrimination_trials.filter({correct:true}).count()/trials_per_block;
+          if (detection_acc>0.55 && discrimination_acc>0.55) {
+            return true
+          } else {
+            return false
+          }
+        }
+      }
+      timeline.push(main_if_node)
+
+      var low_performance = {
+        type: "p5Text",
+        text: "Your performance did not reach our high bar, so we will not " +
+              "continue with the rest of the experiment."
+      };
+
+      low_performance_if_node = {
+        timeline: [low_performance],
+        conditional_function: function() {
+          var all_trials = jsPsych.data.get().last(trials_per_block*2).filter({test_part: 'test'})
+          var detection_trials = all_trials.last(trials_per_block);
+          var discrimination_trials = all_trials.first(trials_per_block);
+          var detection_acc = detection_trials.filter({correct:true}).count()/trials_per_block;
+          var discrimination_acc = discrimination_trials.filter({correct:true}).count()/trials_per_block;
+          if (detection_acc<=0.55 || discrimination_acc<=0.55) {
+            return true
+          } else {
+            return false
+          }
+        }
+      }
+      timeline.push(low_performance_if_node)
+
+      var worker_comments = {
+        type: 'survey-text',
+        preamble: '<h1>Your Thoughts<h1>',
+        questions: [{
+        prompt: "Before we thank you, we would appreciate if you could share " +
+        "any thoughts you had about the experiment, or anything we should "+
+        "take into account when analyzing your data.",
+        pleaceholder: "your comments here",
+        rows:8,
+        columns:60,
+        name: 'worker_comments'
+      }]
+      }
+      timeline.push(worker_comments)
+
+      var thank_you = {
+        type: 'p5Text',
+        title: "Thank you!",
+        text: "Thanks for your time and effort. Your contribution will help us " +
+              "learn about the way people make decisions and form confidence " +
+              "in their decisions."
+      };
+
+      timeline.push(thank_you)
+
+      function saveData(name, data){
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'write_data.php'); // 'write_data.php' is the path to the php file described above.
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({filename: name, filedata: data}));
+      }
+
+      jsPsych.init({
+        timeline: timeline,
+        on_finish: function() {
+          jsPsych.data.displayData();
+          saveData("data/experiment_data", jsPsych.data.get().csv());
+        }
+      })
+
+    </script>
+</html>
