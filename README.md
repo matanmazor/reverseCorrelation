@@ -1,6 +1,8 @@
 # Evidence weighting in confidence judgments for detection and discrimination
 ### Matan Mazor, Lucie Charles, Roni Maimon-Mor & Stephen M. Fleming
 
+<img src="docs/figures/empirical_tile.png" alt="drawing" width="500"/>
+
 ## Data
 Raw data from all three experiments is available on the project's OSF repository: [https://osf.io/7a4fm/](https://osf.io/7a4fm/)
 
