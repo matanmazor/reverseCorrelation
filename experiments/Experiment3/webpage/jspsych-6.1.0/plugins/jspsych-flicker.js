@@ -305,9 +305,8 @@ jsPsych.plugins["flicker"] = (function() {
 						confidence: trial.confidence,
 						conf_RT: trial.conf_RT,
 						luminance: trial.luminance,
-						luminance_boost: trial.luminance_boost
+						brightness_boost: trial.brightness_boost
 					};
-
 					// end trial
 					jsPsych.finishTrial(trial_data);
 				}

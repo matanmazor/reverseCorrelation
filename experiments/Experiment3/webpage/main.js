@@ -678,7 +678,7 @@
 
   /* start the experiment */
   jatos.onLoad(function () {
-    console.log('version 1');
+    console.log('version 2');
     window.participant_number = jatos.batchSession.get(`participant_number`);
     var m = new MersenneTwister();
     Math.random = function() {return m.random()};
@@ -695,9 +695,9 @@
           timeline: timeline,
           on_finish: function() {
               jsPsych.data.addProperties(jatos.urlQueryParameters);
-              var resultCsv = jsPsych.data.get().csv();
+              var resultJson = jsPsych.data.get().json();
               jatos.batchSession.set('participant_number',jatos.batchSession.get(`participant_number`)+1)
-              .then(()=>jatos.submitResultData(resultCsv, jatos.startNextComponent));
+              .then(()=>jatos.submitResultData(resultJson, jatos.startNextComponent));
           }
       });
   });
