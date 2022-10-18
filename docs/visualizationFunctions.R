@@ -1,6 +1,6 @@
 detection_colors = c('#377eb8', '#e41a1c');
 discrimination_colors = c('#4daf4a','#984ea3')
-evidence_colors = c('black','#ebac23')
+evidence_colors = c('#ebac23','black')
 
 plotrcROC = function(df, labels, c, title, AUC, alpha=1) {
   #############################
