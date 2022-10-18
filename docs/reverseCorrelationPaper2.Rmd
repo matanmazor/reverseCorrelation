@@ -139,7 +139,7 @@ In this model, sensory noise is again sampled from $\mathcal{N}(0,2)$, irrespect
 
 This model is similar to the sensory noise model, except that here attention is biased to channels that are more likely to include signal. Specifically, agents track the log likelihood ratio $LLR_r$ between signal in the left or in the right channels, and the probability of attending the right channel is set to $S(LLR_r$ where $S$ is a sigmoid function with a steep slope of 5. A highly similar drift diffusion model was shown to produce a positive evidence bias in confidence ratings [@sepulveda2020visual].
 
-```{r RC-analyze-simulations, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+```{r RC-analyze-simulations, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE,fig.show='hide'}
 
 sim = list()
 
@@ -369,24 +369,113 @@ sim$discrimination_confidence_kernel%>%
     group_by(side,eccentricity) %>%
     summarise(se=se(evidence),
               evidence=mean(evidence))%>%
-    ggplot(aes(x=eccentricity,shape=eccentricity,y=evidence,fill=side)) +
-    geom_hline(yintercept=0) +
-    # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
-    #          color="transparent", fill="black") +
-    geom_line() +
-    geom_ribbon(aes(ymin = evidence-se, ymax = evidence+se, fill=side),alpha=0.5) +
-    scale_color_manual(values=detection_colors)+
-    scale_fill_manual(values=detection_colors) +
-    scale_x_continuous(limits = xlim) +
-    scale_y_continuous(limits = ylim)+
+  ggplot(aes(x=eccentricity,y=evidence,fill=side,shape=eccentricity))+
+  geom_abline(intercept=0, slope=0,size=1) +
+  geom_errorbar(aes(ymin=evidence-se,
+                    ymax=evidence+se), 
+                color='black')+
+  geom_point(size=6) +
+  scale_shape_manual(values=c(21,22,23,24))+
+  scale_color_manual(values=detection_colors)+
+  scale_fill_manual(values=detection_colors) +
+  scale_y_continuous(limits=c(-0.2,0.5)) +
+  theme_minimal()+theme(
+    axis.text.y=element_blank(),
+    axis.ticks.y=element_blank()) +
+  labs(y='evidence',
+       x='')+
+  theme(legend.position = 'none');
+  
+
+  ggsave(paste('./figures/RC/sim/detection_conf_yes.png',sep='/'),
+         width=3.5,height=3)
+  
+  sim$signal_confidence_kernel%>%
+    filter(response==1)%>%
+    group_by(subj_id,eccentricity) %>%
+    summarise(rel_evidence=mean(diff[side=='true'])-mean(diff[side=='opposite']),
+              sum_evidence = mean(diff[side=='true'])+mean(diff[side=='opposite'])) %>%
+      pivot_longer(cols = ends_with('evidence'),names_to='contrast',values_to='evidence')%>%
+      group_by(contrast,eccentricity) %>%
+      summarise(se=se(evidence),
+                evidence=mean(evidence)) %>%
+    ggplot(aes(x=eccentricity,y=evidence,fill=contrast, shape=eccentricity)) +
+    geom_abline(intercept=0, slope=0,size=1) +
+    geom_errorbar(aes(ymin=evidence-se,
+                      ymax=evidence+se), 
+                  color='black')+
+    geom_point(size=6) +
+    scale_shape_manual(values=c(21,22,23,24))+
+    scale_color_manual(values=evidence_colors)+
+    scale_fill_manual(values=evidence_colors) +
+    scale_y_continuous(limits=c(-0.2,0.5)) +
     theme_minimal()+theme(
       axis.text.y=element_blank(),
       axis.ticks.y=element_blank()) +
     labs(y='evidence',
-         x='time (ms.)')+
+         x='')+
     theme(legend.position = 'none');
+  
 
-  ggsave(paste('./figures/RC',exp_label,'detection_conf_yes.png',sep='/'),
+  ggsave(paste('./figures/RC/sim/detection_conf_yes_sum_rel.png',sep='/'),
+         width=3.5,height=3)
+  
+    sim$signal_confidence_kernel %>%
+    filter(response==0)%>%
+    group_by(subj_id,side,eccentricity) %>%
+    summarise(evidence=mean(diff)) %>%
+    group_by(side,eccentricity) %>%
+    summarise(se=se(evidence),
+              evidence=mean(evidence))%>%
+  ggplot(aes(x=eccentricity,y=evidence,fill=side,shape=eccentricity))+
+  geom_abline(intercept=0, slope=0,size=1) +
+  geom_errorbar(aes(ymin=evidence-se,
+                    ymax=evidence+se), 
+                color='black')+
+  geom_point(size=6) +
+  scale_shape_manual(values=c(21,22,23,24))+
+  scale_color_manual(values=detection_colors)+
+  scale_fill_manual(values=detection_colors) +
+  scale_y_continuous(limits=c(-0.2,0.5)) +
+  theme_minimal()+theme(
+    axis.text.y=element_blank(),
+    axis.ticks.y=element_blank()) +
+  labs(y='evidence',
+       x='')+
+  theme(legend.position = 'none');
+  
+
+  ggsave(paste('./figures/RC/sim/detection_conf_no.png',sep='/'),
+         width=3.5,height=3)
+  
+  sim$signal_confidence_kernel%>%
+    filter(response==0)%>%
+    group_by(subj_id,eccentricity) %>%
+    summarise(rel_evidence=mean(diff[side=='true'])-mean(diff[side=='opposite']),
+              sum_evidence = mean(diff[side=='true'])+mean(diff[side=='opposite'])) %>%
+      pivot_longer(cols = ends_with('evidence'),names_to='contrast',values_to='evidence')%>%
+      group_by(contrast,eccentricity) %>%
+      summarise(se=se(evidence),
+                evidence=mean(evidence)) %>%
+    ggplot(aes(x=eccentricity,y=evidence,fill=contrast, shape=eccentricity)) +
+    geom_abline(intercept=0, slope=0,size=1) +
+    geom_errorbar(aes(ymin=evidence-se,
+                      ymax=evidence+se), 
+                  color='black')+
+    geom_point(size=6) +
+    scale_shape_manual(values=c(21,22,23,24))+
+    scale_color_manual(values=evidence_colors)+
+    scale_fill_manual(values=evidence_colors) +
+    scale_y_continuous(limits=c(-0.2,0.5)) +
+    theme_minimal()+theme(
+      axis.text.y=element_blank(),
+      axis.ticks.y=element_blank()) +
+    labs(y='evidence',
+         x='')+
+    theme(legend.position = 'none');
+  
+
+  ggsave(paste('./figures/RC/sim/detection_conf_no_sum_rel.png',sep='/'),
          width=3.5,height=3)
   
 ```
@@ -406,7 +495,243 @@ In both cases, it is useful to ask what it would look like for an agent to only 
 
 ## Discrimination decisions
 
-First, to make sure we are measuring true random fluctuations and not systematic differences between noise and signal channel, we mean centered all signal channels to 0. ‘Sum evidence’ was defined as the total sum of noise terms across both channels $E_r+E_l$. ‘Relative evidence’ was defined as the difference in noise terms between the signal and non-signal channels ($E_r-E_l$ when $E_r$ was the signal channel and $E_l-E_r$ when $E_l$ was the signal channel). All four models predicted that the probability of correctly identifying the signal channel in the discrimination task should increase with relative evidence (Fig. 3A). The models predicted no effect of sum evidence on discrimination decisions.
+First, to make sure we are measuring true random fluctuations and not systematic differences between noise and signal channel, we mean centered all signal channels to 0. ‘Sum evidence’ was defined as the total sum of noise terms across both channels $E_r+E_l$. ‘Relative evidence’ was defined as the difference in noise terms between the signal and non-signal channels ($E_r-E_l$ when $E_r$ was the signal channel and $E_l-E_r$ when $E_l$ was the signal channel). All four models predicted that the probability of correctly identifying the signal channel in the discrimination task should increase with relative evidence (Fig. \@ref(fig:RC-simulations)A, orange markers). The models predicted no effect of sum evidence on discrimination decisions.
+
+
+(ref:RC-simulations) Predictions for the reverse correlation analysis, derived from the four models. A: the effect of relative (orange markers) and sum (black markers) evidence on discrimination decision. B: the effect of evidence for the chosen (green markers) and unchosen (purple markers) alternatives on discrimination confidence. C: the effect of sum and relative evidence (defined with respect to participants’ decisions) on discrimination confidence. Panels D, F and H: The effect of evidence in the signal channel (blue markers) and in the non-signal channel (red markers) on detection decisions, confidence in yes responses, and confidence in no responses, respectively. Panels E, G, and I: The effect of relative evidence (orange markers) and sum evidence (black markers) on detection decisions, confidence in yes responses, and confidence in no responses, respectively. Stars represent significance in a two-sided t-test: \*: p<0.05, \*\*: p<0.01, \*\*\*: p<0.001.
+
+```{r RC-simulations, fig.cap="(ref:RC-simulations)"}
+
+knitr::include_graphics('figures/RC/sim/summary.png')
+
+```
+
+## Discrimination confidence
+
+The median confidence rating was used to split evidence channels into four sets, according to decision (chosen or unchosen, depending on the agent’s decision) and confidence level (high or low). Confidence kernels for the chosen and unchosen channels were then extracted by subtracting the mean low-confidence from the mean high-confidence vectors for each channel. In all four models, agents were more confident in their discrimination decisions when confidence strengthened evidence in the chosen direction (Fig. \@ref(fig:RC-simulations)B, green markers) and weakened evidence in the unchosen direction (Fig. \@ref(fig:RC-simulations)B, purple markers). As expected, this translated to an effect of relative evidence on decision confidence: agents were more confident when the evidence difference between the chosen and unchosen channels was high (Fig. \@ref(fig:RC-simulations)C, orange markers).
+
+Critically, only the stimulus-dependent noise and goal-directed attention models produced an effect of sum evidence on decision confidence, such that agents were more confident when overall evidence was high (Fig. \@ref(fig:RC-simulations)C, black markers). As reviewed above, this is a positive evidence bias in discrimination confidence.
+
+## Detection decisions
+
+For the reverse correlation analysis of detection decisions, we focused on trials in which a signal was present. This allowed us to disentangle the effects of evidence in the signal and non-signal channels on detection decisions and confidence. We subtracted evidence in trials that resulted in a ‘no’ (target absent) decision from evidence in trials that resulted in a ‘yes’ (target present) decision, separately for the signal and non-signal channels. All four models predicted that agents should be more likely to respond ‘yes’ when evidence is stronger in the signal channel (Fig. \@ref(fig:RC-simulations)D, blue markers). Importantly, the same was true for evidence in the non-signal channel: agents were more likely to respond ‘yes’ when evidence was stronger in this channel too (Fig. \@ref(fig:RC-simulations)D, red markers). Together, these two positive effects translated to a strong effect of sum evidence on detection decisions: agents were more likely to respond ‘yes’ when the total sum of evidence was high (Fig. \@ref(fig:RC-simulations)E, black markers). A weaker effect of relative evidence on detection decisions was observed in all models except for the random attention model (Fig. \@ref(fig:RC-simulations)E, orange markers).
+
+## Detection confidence
+
+Similar to the discrimination task, the median confidence rating was used to split evidence channels into four sets, according to signal (signal channel or non-signal channel) and confidence level (high or low). This was done separately for ‘yes’ and ‘no’ responses. Confidence kernels for the signal and non-signal channels were then extracted by subtracting the mean low-confidence from the mean high-confidence evidence values for each channel and decision.
+
+In all four models, agents were more confident in their decisions about signal presence when evidence in the signal channel was stronger (Fig. \@ref(fig:RC-simulations)F, blue markers). Mirroring the detection decision kernels, confidence in signal presence was also positively affected by evidence for signal in the non-signal channel (Fig. \@ref(fig:RC-simulations)F, red markers). Together, these two positive effects produced an overall positive effect of sum evidence on confidence in presence (Fig. \@ref(fig:RC-simulations)G, black markers). All four models predicted a weaker effect of relative evidence (Fig. \@ref(fig:RC-simulations)G, orange markers).
+
+Finally, in all four models, agents were more confident in decisions about signal absence when evidence in both signal and non-signal channels was weaker (Fig. \@ref(fig:RC-simulations)H, blue and red markers, respectively). Together, these negative effects translated to a total negative effect of sum evidence on confidence in absence (Fig. \@ref(fig:RC-simulations)I, black markers). None of the four models predicted a negative effect of relative evidence on confidence in absence, but the random attention model predicted a subtle positive effect (Fig. \@ref(fig:RC-simulations)I, orange markers).
+
+# Experiment 1
+
+## Methods
+
+### Participants
+
+The research complied with all relevant ethical regulations, and was approved by the Research Ethics Committee of University College London (study ID number 1260/003). 10 participants were recruited via the UCL’s psychology subject pool, and gave their informed consent prior to their participation. Each participant performed four sessions of 600 trials each, in blocks of 100 trials. Sessions took place on different days and consisted of 3 discrimination blocks interleaved with 3 detection blocks.
+
+### Experimental procedure
+
+The experimental procedure for Exp. 1 largely followed the procedure described in @zylberberg2012construction, Exp. 1. Participants observed a random-dot kinematogram for a fixed duration of 700 ms. In discrimination trials, the direction of motion was one of two opposite directions with equal probability, and participants reported the observed direction by pressing one of two arrow keys on a standard keyboard. In detection blocks participants reported whether there was any coherent motion by pressing one of two arrow keys on a standard keyboard. In half of the detection trials dots moved coherently to one of two opposite directions, and in the other half all dots moved randomly.
+
+In both detection and discrimination blocks, participants indicated their confidence following each decision. Confidence was reported on a continuous scale ranging from chance to complete certainty. To avoid systematic response biases affecting confidence reports, the orientation (vertical or horizontal) and polarity (e.g., right or left) of the scale was set to agree with the type 1 response. For example, following an up arrow press, a vertical confidence bar was presented where ‘guess’ is at the center of the screen and ‘certain’ appeared at the upper end of the scale (see Fig. \@ref(fig:RC-design1)).
+
+(ref:RC-design1) Task design for Experiment 1. In both discrimination and detection blocks, participants viewed 700 milliseconds of a random dot motion array, after which they made a keyboard response to indicate their decision (motion direction in discrimination, signal absence or presence in detection), followed by a continuous confidence report using the mouse. 5 participants viewed vertically moving dots and indicated their detection responses on a horizontal scale, and 5 participants viewed horizontally moving dots and indicated their detection responses on a vertical scale.
+
+```{r RC-design1, fig.cap="(ref:RC-design1)"}
+
+knitr::include_graphics('figures/design1.png')
+
+```
+
+To control for response requirements, for five subjects the dots moved to the right or to the left, and for the other five subjects they moved upward or downward. The first group made discrimination judgments with the right and left keys and detection judgments with the up and down keys, and this mapping was reversed for the second group. The number of coherently moving dots (‘motion coherence’) was adjusted to maintain performance at around 70% accuracy for detection and discrimination tasks independently. This was achieved by measuring mean accuracy after every 20 trials, and adjusting coherence by a step of 3% if accuracy fell below 60% or went above 80%.
+
+Stimuli for discrimination blocks were generated using the exact same procedure reported in @zylberberg2012construction^[We reused the original Matlab code that was used for Exp. 1 in Zylberberg et. al. (2012), kindly shared by Ariel Zylberberg. ]. Trials started with a presentation of a fixation cross for one second, immediately followed by stimulus presentation. The stimulus consisted of 152 white dots (diameter = $0.14^\circ$), presented within a $6.5^\circ$ circular aperture centered on the fixation point for 700 milliseconds (42 frames, frame rate = 60 Hz). Dots were grouped in two sets of 76 dots each. Every other frame, the dots of one set were replaced with a new set of randomly positioned dots. For each coherence value of $c'$, a proportion of $c'$ of the dots from the second set moved coherently in one direction by a fixed distance of $0.33^\circ$, while the remaining dots in the set moved in random directions by a fixed distance of $0.33^\circ$. On the next update, the sets were switched, to prevent participants from tracing the position of specific dots. Frame-specific coherence values were sampled for each screen update from a normal distribution centred around the coherence value $c$ with a standard deviation of 0.07, with the constraint that $c'$ must be a number between 0 and 1.
+
+Stimuli for detection blocks were generated using a similar procedure, where on a random half of the trials coherence was set to 0%, without random sampling of coherence values for different frames.
+
+To probe global metacognitive estimates of task performance, at the end of each experimental block (100 trials) participants estimated the number of correct responses they have made. Analysis of these global metacognitive estimates is provided in Appendix \@ref(global).
+
+## Analysis
+
+Experiment 1 was pre-registered (pre-registration document is available here: [https://osf.io/z2s93/](https://osf.io/z2s93/)). Our full pre-registered analysis is available in the Appendix.
+
+## Reverse correlation analysis
+
+For the reverse correlation analysis, we followed a procedure similar to the one described in @zylberberg2012construction. For each of the four directions (right, left, up and down), we applied two spatiotemporal filters to the frames of the dot motion stimuli as described in previous studies (Adelson & Bergen, 1985; Zylberberg et al., 2012). The outputs of the two filters were squared and summed, resulting in a three-dimensional matrix with motion energy in a specific direction as a function of x, y, and time. We then took the mean of this matrix across the x and y dimensions to obtain an estimate of the overall temporal fluctuations in motion energy in the selected direction. Using this filter, we obtained estimates of temporal fluctuations in the mean and variance of motion energy for upward, downward, leftward and rightward motion within each trial. Additionally, for every time point we extracted the variance along the x and y dimensions, but given a high correlation between our mean and variance estimates, we focused our analysis on the mean motion energy.
+
+In order to distill random fluctuations in motion energy from mean differences between stimulus categories, we subtracted the mean motion energy from trial-specific motion energy vectors. The mean motion energy vectors were extracted at the group level, separately for each motion coherence level and as a function of motion direction. We chose this approach instead of the linear regression approach used by @zylberberg2012construction in order to be sensitive to the possibility of nonlinear effects of coherence on motion energy.
+
+# Results
+
+```{r RC-exp1-load-and-format-data, echo=FALSE, cache=TRUE, message=FALSE}
+
+e1 = list()
+
+
+e1$df <- read_csv('../experiments/Experiment1/data/RC.csv', lazy=FALSE) %>%
+  group_by(subj_id, detection) %>%
+  mutate(confidence=confidence/1000,
+         # in the original coding, 3 is right and 1 is left. 
+         # changed to be 0 for right/up and 1 for left/down, to align 
+         # with the coding of responses.
+         direction = ifelse(direction==3,1,0)); 
+ 
+e1$trial_df_unfiltered <- e1$df %>%
+  group_by(subj_id, trial_id) %>%
+  summarise(
+    detection = detection[timepoint==1],
+    direction = direction[timepoint==1],
+    signal = signal[timepoint==1],
+    response = response[timepoint==1],
+    RT = RT[timepoint==1]-700, # stimulus duration
+    confidence = confidence[timepoint==1],
+    correct = correct[timepoint==1],
+    trial_number = trial_number[timepoint==1],
+    logRT = log(RT[timepoint==1]),
+    conf_bi = ifelse(
+        response==1, 
+        as.numeric(confidence),
+        -1*as.numeric(confidence)))%>%
+  group_by(subj_id) %>%
+  mutate(
+    conf_discrete = ntile(confidence,20) %>%
+      factor(levels=1:21))
+
+e1$task_stats_unfiltered <- e1$trial_df_unfiltered %>%
+  group_by(subj_id,detection) %>%
+  summarise(acc=mean(correct),
+            RT = median(RT),
+            confidence=mean(confidence));
+
+e1$trial_df <- e1$trial_df_unfiltered %>%
+  filter(trial_number>300);
+
+e1$detection_df <- e1$trial_df %>%
+  filter(detection==1) %>%
+  mutate(stimulus=signal);
+
+e1$discrimination_df <- e1$trial_df %>%
+  filter(detection==0) %>%
+  mutate(stimulus = direction);
+
+```
+
+
+```{r RC-exp1-general-stats, echo=FALSE, cache=TRUE, message=FALSE}
+e1 <- e1 %>% 
+  generalStats2Tasks() %>%
+  testAUC() %>%
+  testzROC2tasks();
+```
+
+### Response accuracy
+
+Overall proportion correct was `r e1$task_stats_unfiltered%>%filter(detection==0)%>%pull(acc)%>%mean()%>%printnum()` in the discrimination and `r e1$task_stats_unfiltered%>%filter(detection==1)%>%pull(acc)%>%mean()%>%printnum()` in the detection task. Performance for discrimination was significantly higher than for detection (`r t.test(e1$task_stats_unfiltered%>%filter(detection==0)%>%pull(acc), e1$task_stats_unfiltered%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(full_result)`). This difference in task performance reflected a slower convergence of the staircasing procedure for the discrimination task during the first session. When discarding all data from the first session and analyzing only data from the last three sessions (1800 trials per participant), task performance was equated between the two tasks at the group level (`r t.test(e1$task_stats%>%filter(detection==0)%>%pull(acc), e1$task_stats%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(full_result)`; `r ttestBF(e1$task_stats%>%filter(detection==0)%>%pull(acc), e1$task_stats%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(statistic)`).  In order to avoid confounding differences between discrimination and detection decision and confidence profiles with more general task performance effects, the first session was excluded from all subsequent analyses.
+
+### Overall properties of response time and confidence distributions
+
+In detection, participants were more likely to respond 'yes' than 'no' (mean proportion of 'yes' responses: `r t.test(e1$detection_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). We did not observe a consistent response bias for the discrimination data (mean proportion of 'rightward' or 'upward' responses: `r t.test(e1$discrimination_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). 
+
+Replicating previous studies [@meuwese2014subjective; @mazor2020distinct; @kellij2021investigation; @mazor2021stage], we find the typical asymmetries between detection 'yes' and 'no' responses in response time, overall confidence, and the alignment between subjective confidence and objective accuracy (also termed metacognitive sensitivity, here measured as the area under the response-conditional type 2 ROC curve; see Fig. \@ref(fig:RC-exp1-asymmetries)). 'No' responses were slower compared to 'yes' responses (median difference: `r e1$detection_stats$contrast_responses%>%pull(RT)%>%median()%>%abs()%>%printnum()` ms), and accompanied by lower levels of subjective confidence (mean difference of `r e1$detection_stats$contrast_responses$confidence%>%mean()%>%printnum()` on a 0-1 scale). Metacognitive sensitivity was higher for detection 'yes' compared with detection 'no' responses (mean difference in area under the curve units: `r e1$AUC%>%filter(detection==1)%>%pull(metacognitive_asymmetry)%>%mean()%>%printnum()`). No difference in response time, confidence, or metacognitive sensitivity was found between the two discrimination responses. For a detailed statistical analysis of these behavioural asymmetries see Appendix \@ref(appRC:asymmetries1).
+
+(ref:exp1-asymmetries) Behavioural asymmetries in metacognitive sensitivity, response time, and overall confidence in detection (upper panel) and discrimination (lower panel), in Exp. 1. Left: Response conditional type 2 ROC curves for the two tasks and four responses in Exp. 1. The area under the type 2 ROC curve is a measure of metacognitive sensitivity, and the difference in areas between the two responses a measure of metacognitive asymmetry. Single-subject curves are presented in low opacity. Right: distributions of the area under the type 2 ROC curve, median response time, and mean confidence for the four responses, across participants. Box edges and central lines represent the 25, 50 and 75 quantiles. Whiskers cover data points within four inter-quartile ranges around the median. Stars represent significance in a two-sided t-test: \*\*: p<0.01, \*\*\*: p<0.001
+
+
+```{r RC-exp1-asymmetries, echo=FALSE, message=FALSE, fig.cap="(ref:exp1-asymmetries)", fig.scap="Behavioural asymmetries in metacognitive sensitivity, response time, and overall confidence, in Exp. 1"}
+
+# plotAllAsymmetries(e1,'figures/RC-exp1-asymmetries.pdf');
+knitr::include_graphics("figures/RC-exp1-asymmetries-enhanced.png")
+```
+
+## Reverse correlation
+
+
+```{r RC-exp1-discrimination-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1"}
+
+e1$discRCdf <- e1$df %>%
+  filter(detection==0 & 
+           trial_number>300) %>%
+  dplyr::select(-c('energyDown','energyUp'))%>%
+  pivot_longer(cols=starts_with('energy'),values_to='energy',names_to='measured_direction')%>%
+  mutate(measured_direction=ifelse(measured_direction=='energyRight',0,1),
+         obj_side=factor(ifelse(measured_direction==direction, 'true','opposite'),
+                         levels=c('true','opposite')),
+         side=ifelse(response==measured_direction,'chosen','unchosen'),
+         session = round(trial_number/300)) %>%
+  group_by(subj_id, session) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    eccentricity=1,
+    time=(timepoint-4)/60*1000)%>%
+  group_by(obj_side)%>%
+  mutate(evidence=energy/sd(energy))
+
+e1 <- e1 %>% 
+  getDiscriminationKernels() %>%
+  contrastDiscriminationKernels()
+
+e1$discrimination_accuracy_kernel <- e1$discrimination_accuracy_kernel %>%
+  group_by(subj_id, contrast)%>%
+  arrange(time) %>%
+  mutate(evidence=rollapply(evidence,5,mean,align='right',fill=NA))
+
+e1$discrimination_confidence_kernel <- e1$discrimination_confidence_kernel %>%
+  group_by(subj_id, side)%>%
+  arrange(time) %>%
+  mutate(diff=rollapply(diff,5,mean,align='right',fill=NA));
+
+e1 %>% plotDiscriminationKernels('exp1',c(0,750),c(-0.3,0.4))
+```
+
+### Discrimination
+
+Using reverse correlation we quantified the effect of random fluctuations in motion energy on the probability of correctly identifying the true direction of motion, and on the temporal dynamics of decision formation. Following @zylberberg2012construction, we focused our analysis on the first 300 ms of the trial. Participants’ discrimination responses were significantly affected by the relative evidence for the true direction of motion compared to the opposite direction (`r apa_print(e1$RC$accuracy_rel300$diff%>%t.test())$statistic`), whereas sum evidence (the total amount of energy in both directions) had no effect on discrimination accuracy (`r apa_print(e1$RC$accuracy_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)A). This is consistent with a symmetric weighting of positive and negative evidence in decision formation, and with the predictions of all four models.
+
+We then turned to the contribution of motion energy to subjective confidence ratings. The median confidence rating in each experimental session was used to split all motion energy vectors into four groups, according to decision (chosen or unchosen directions) and confidence level (high or low). Confidence kernels for the chosen and unchosen directions were then extracted by subtracting the mean low-confidence from the mean high-confidence vectors for both the chosen and unchosen directions. Motion energy in the chosen direction (positive evidence) significantly increased confidence (`r apa_print(e1$RC$confidence_pos300$diff%>%t.test())$statistic`), but we found no significant decrease in confidence with stronger motion energy in the opposite direction (negative evidence; `r apa_print(e1$RC$confidence_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)B). Equivalently, both relative and sum evidence positively contributed to decision confidence (relative evidence: `r apa_print(e1$RC$confidence_rel300$diff%>%t.test())$statistic`; sum evidence: `r apa_print(e1$RC$confidence_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)C). This is a replication of the Positive Evidence Bias observed in @zylberberg2012construction, and consistent with the predictions of the stimulus-dependent noise and goal-directed attention models.
+
+```{r RC-exp1-signal-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1"}
+
+e1$signalRCdf <- e1$df %>%
+  filter(detection==1 & 
+           signal==1 &
+           trial_number>300) %>%
+  dplyr::select(-c('energyDown','energyUp'))%>%
+  pivot_longer(cols=starts_with('energy'),values_to='energy',names_to='measured_direction')%>%
+  mutate(measured_direction=ifelse(measured_direction=='energyRight',0,1),
+         side=ifelse(factor(measured_direction==direction, 'true','opposite'),
+                     levels=c('true','opposite')),
+         session = round(trial_number/300)) %>%
+  group_by(subj_id, session,response) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    eccentricity=1,
+    time=(timepoint-4)/60*1000)%>%
+  group_by(side)%>%
+  mutate(evidence=energy/sd(energy))
+
+e1 <- e1 %>% 
+  getDetectionSignalKernels() %>%
+  contrastDetectionSignalKernels()
+
+e1$signal_decision_kernel <- e1$signal_decision_kernel %>%
+  group_by(subj_id,side)%>%
+  arrange(time) %>%
+  mutate(evidence=rollapply(evidence,5,mean,align='right',fill=NA))
+
+e1$signal_confidence_kernel <- e1$signal_confidence_kernel %>%
+  group_by(subj_id, side,response)%>%
+  arrange(time) %>%
+  mutate(diff=rollapply(diff,5,mean,align='right',fill=NA));
+
+e1 %>% plotDetectionSignalKernels('exp1',c(0,750),c(-0.3,0.4))
+```
 
 # References
 

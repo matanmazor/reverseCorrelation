@@ -205,8 +205,8 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
                                               group_by(contrast,time, subj_id) %>%
                                               summarise(evidence=mean(evidence)) %>%
                                               group_by(contrast,time)%>%
-                                              summarise(se=se(evidence),
-                                                        evidence=mean(evidence)),aes(x=time,y=evidence,color=contrast)) +
+                                              summarise(se=se(evidence, na.rm=T),
+                                                        evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=contrast)) +
     geom_hline(yintercept=0)  +
     # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
     #          color="transparent", fill="black") +
@@ -231,8 +231,8 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
                                                 group_by(side,time, subj_id) %>%
                                                 summarise(evidence=mean(diff)) %>%
                                                 group_by(side,time)%>%
-                                                summarise(se=se(evidence),
-                                                          evidence=mean(evidence)),aes(x=time,y=evidence,color=side)) +
+                                                summarise(se=se(evidence, na.rm=T),
+                                                          evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=side)) +
     geom_hline(yintercept=0)  +
     # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
     #          color="transparent", fill="black") +
@@ -259,8 +259,8 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
                                                                   sum_evidence = mean(diff[side=='chosen'])+mean(diff[side=='unchosen'])) %>%
                                                         pivot_longer(cols=ends_with('evidence'), names_to='contrast', values_to='evidence') %>%
                                                         group_by(contrast,time)%>%
-                                                        summarise(se=se(evidence),
-                                                                  evidence=mean(evidence)),aes(x=time,y=evidence,color=contrast)) +
+                                                        summarise(se=se(evidence, na.rm=T),
+                                                                  evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=contrast)) +
     geom_hline(yintercept=0)  +
     # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
     #          color="transparent", fill="black") +
