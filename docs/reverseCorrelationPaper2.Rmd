@@ -1034,6 +1034,7 @@ e3$trial_df <- e3$df %>%
     confidence = confidence[side==1 & timepoint==1 & eccentricity == 1],
     correct = correct[side==1 & timepoint==1 & eccentricity == 1],
     trial_number = trial[side==1 & timepoint==1 & eccentricity == 1],
+    brightness_boost = brightness_boost[side==1 & timepoint==1 & eccentricity == 1],
     conf_bi = ifelse(
       response==1, 
       as.numeric(confidence),
@@ -1121,7 +1122,7 @@ Discrimination decisions were sensitive to relative evidence during the first 30
 
 (ref:RC-exp3-RC) Reverse correlation, Exp. 3. Same conventions as in Fig. \@ref(fig:RC-exp1-RC).
 
-```{r RC-exp3-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-exp2-RC)"}
+```{r RC-exp3-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-exp3-RC)"}
 
 knitr::include_graphics("figures/RC/exp3/summary.png")
 ```
@@ -1151,15 +1152,115 @@ e3 <- e3 %>%
   plotDetectionSignalKernels('exp3',c(0,440),c(-0.4,0.8))
 ```
 
-#### Detection
-
 Participants’ detection decisions were sensitive to fluctuations in the luminance of the target stimulus, such that ‘yes’ responses were associated with brighter target stimuli (`r apa_print(e3$RC$signal_decision_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp3-RC)D, blue curve). Replicating the surprising results of Exp. 1 and 2, the luminance of the non-target stimulus had a negative effect on the probability of responding ‘yes’ in the detection task (`r apa_print(e3$RC$signal_decision_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp3-RC)D, red curve) Together, detection decisions were sensitive to relative evidence (the difference in luminance between the target and non-target stimuli;`r apa_print(e3$RC$signal_decision_rel300$diff%>%t.test())$statistic`), and to sum evidence (the overall luminance of the display; `r apa_print(e3$RC$signal_decision_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp3-RC)E, orange and black curves, respectively).
 
 Confidence in detection ‘yes’ responses was similarly positively correlated with the luminance of the target stimulus (`r apa_print(e3$RC$signal_confidenceYes_pos300$diff%>%t.test())$statistic`), and negatively correlated with the luminance of the non-target stimulus (`r apa_print(e3$RC$signal_confidenceYes_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp3-RC)F). This is again in contrast to what is expected from a Bayes-rational agent: the proportion of being correct is positively correlatd with evidence intensith in both signal and non-signal channels. Recall that a surprising finding in Exp. 1 and 2 was that sum evidence (motion energy or luminance) had no effect on participants’ confidence in their judgments of stimulus presence. In contrast, in Exp. 3 sum luminance had a significant positive effect on decision confidence when reporting target presence (‘yes’ responses; `r apa_print(e3$RC$signal_confidenceYes_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp3-RC)G, black curve).
 
 Finally, confidence in detection ‘no’ responses was marginally sensitive to random fluctuations in the luminance of the target, such that participants were more confident in the absence of a signal when the target stimulus was darker (`r apa_print(e3$RC$signal_confidenceNo_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC_exp3-RC)H). Relative evidence also had a marginally significant negative effect on confidence in decisions about absence (`r apa_print(e3$RC$signal_confidenceNo_rel300$diff%>%t.test())$statistic`). The luminance of the non-target stimulus and the overall luminance had no significant effects on confidence in detection ‘no’ responses (p's>0.3).
 
+### Evidence-weighting
 
+In Experiments 1 and 2, confidence in stimulus presence was invariant to sum evidence (overall motion energy in Exp.1, sum luminance in Exp. 2). This was surprising for two reasons. First, in both cases sum motion energy did have a significant effect on detection decisions. Second, incorporating information about sum evidence into confidence in the presence of a stimulus is rational: a bright target stimulus is more likely to be present when both target *and* non-target stimuli are bright compared to when both are dark. As we document above, however, the counterintuitive findings of Exps. 1 and 2 only partly replicated in Exp. 3: subjects still negatively weighted the luminance of the non-target stimulus (despite being irrational), but this negative effect was weaker than the positive effect of the luminance of the target stimulus, resulting in an overall positive effect of sum evidence on detection confidence.
+
+To shed further light on this issue, in Exp. 3 half of the trials consisted of slightly brighter stimuli, thereby increasing statistical power for tests of the effects of sum luminance on discrimination and detection decisions and confidence.
+
+First, we established that participants were more likely to respond 'yes' on higher- compared to lower-luminance trials (`r apa_print(e3$H2)$full_result`), consistent with overall luminance providing a valid cue for signal presence. 
+
+```{r RC-exp3-ew, echo=FALSE, warning=FALSE, message=FALSE}
+
+e3$discrimination_conf_PEB <- e3$trial_df %>%
+  filter(detection==0) %>%
+  group_by(subj_id, brightness_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[brightness_boost==2]-confidence[brightness_boost==0]);
+
+e3$H1$t.test <- t.test(e3$discrimination_conf_PEB$PEB);
+e3$H1$d <- cohensD(e3$discrimination_conf_PEB$PEB);
+
+e3$detection_dec_PEB <- e3$trial_df %>%
+  filter(detection==1) %>%
+  group_by(subj_id, brightness_boost) %>%
+  summarise(P=mean(as.numeric(as.character(response))))%>%
+  group_by(subj_id)%>%
+  summarise(PEB=P[brightness_boost==2]-P[brightness_boost==0]);
+
+e3$H2 <- t.test(e3$detection_dec_PEB$PEB);
+
+e3$PEB_interaction <- e3$trial_df %>%
+  filter(correct==1 & signal==1) %>%
+  group_by(subj_id, detection, brightness_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id,detection) %>%
+  summarise(PEB=confidence[brightness_boost==2]-confidence[brightness_boost==0]) %>%
+  group_by(subj_id) %>%
+  summarise(PEB_diff = PEB[detection==0]-PEB[detection==1]); 
+
+e3$H3 <- t.test(e3$PEB_interaction$PEB_diff);
+
+e3$yes_conf_PEB <- e3$trial_df %>%
+  filter(detection==1 & response==1) %>%
+  group_by(subj_id, brightness_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[brightness_boost==2]-confidence[brightness_boost==0]);
+
+
+e3$H4$BF <- ttestBF(e3$yes_conf_PEB$PEB,rscale=e3$H1$d);
+e3$H4$t.test <- t.test(e3$yes_conf_PEB$PEB)
+
+
+e3$no_conf_PEB <- e3$trial_df %>%
+  filter(detection==1 & response==0) %>%
+  group_by(subj_id, brightness_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[brightness_boost==2]-confidence[brightness_boost==0]);
+
+e3$H5$BF <- ttestBF(e3$no_conf_PEB$PEB,rscale=e3$H1$d);
+e3$H5$t.test <- t.test(e3$no_conf_PEB$PEB)
+```
+
+We next turned to the effects of our luminance manipulation on confidence. For discrimination judgments, participants were also more confident in higher- compared to lower- luminance trials (`r apa_print(e3$H1$t.test)$full_result`), replicating a positive evidence bias for discrimination confidence. For detection judgments, in line with the reverse correlation analysis of Exp. 3 (and in contrast to the findings of Experiments 1 and 2), participants were more confident in their 'yes' responses when overall luminance was higher (`r apa_print(e3$H4$t.test)$full_result`). Our pre-registered Bayesian analysis provided strong evidence for the alternative hypothesis that detection confidence is affected by this manipulation (`r apa_print(e3$H4$BF)$statistic`). Furthermore, this increase in 'yes' response confidence as a function of the brightness manipulation was not significantly different from that observed for discrimination confidence (`r apa_print(e3$H3)$full_result`). Finally, and in line with Exp. 2, overall luminance had a significant negative effect on confidence in 'no' responses (`r apa_print(e3$H5$t.test)$full_result`), indicating that participants were more confident in the absence of a target when overall luminance was lower. 
+
+(ref:conf-boost) Difference in confidence between standard and higher-luminance trials for the three response categories (detection 'yes' and 'no' responses, and discrimination responses) in Exp. 3. Box edges and central lines represent the 25, 50 and 75 quantiles. Whiskers cover data points within four inter-quartile ranges around the median. Stars represent significance in a two-sided t-test: \*\*: p<0.01
+
+```{r RC-exp3-conf-boost, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="(ref:conf-boost)", fig.scap="Difference in confidence between standard and high-luminance trials in Exp. 3"}
+
+
+conf_boost_df <- e3$trial_df %>%
+  mutate(response_category = factor(ifelse(detection==0, 'discrimination', 
+                                           ifelse(response==1, 'yes','no')), 
+                                    levels=c('yes','no','discrimination'))) %>%
+  group_by(subj_id,brightness_boost,response_category)%>%
+  summarise(confidence=mean(confidence),
+            RT=mean(RT),
+            correct=mean(as.numeric(as.character(correct))));
+
+e3$accuracy_boost <- conf_boost_df %>%
+  filter(response_category=='discrimination') %>%
+  group_by(subj_id) %>%
+  summarise(accuracy_effect=correct[brightness_boost==2]-correct[brightness_boost==0]) %>%
+  merge(e3$discrimination_conf_PEB)
+
+p<-ggplot(conf_boost_df,
+             aes(x=brightness_boost,y=confidence,group=brightness_boost,fill=response_category,color=response_category)) +
+  ylim(0,1)+
+  geom_boxplot(size=1,fill='white',outlier.alpha=0)+
+  geom_jitter(alpha=0.3,size=2, width=0.3) +
+  scale_color_manual(values=c(detection_colors,discrimination_colors[1]))+
+  scale_fill_manual(values=c(detection_colors,discrimination_colors[1]))+
+  scale_x_continuous(breaks=c(0,2))+
+  theme_classic()+
+  theme(legend.position='none',
+        plot.margin=unit(c(0, 25, 0, 25),'pt'))+
+  facet_grid(~response_category)+
+  labs(x='brightness');
+
+# ggsave('figures/confidence_boost.png',p,width=6,height=3)
+knitr::include_graphics('figures/confidence_boost_enhanced_color_headings.png')
+
+```
 
 # References
 
