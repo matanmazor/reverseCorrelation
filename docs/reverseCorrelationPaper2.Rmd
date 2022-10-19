@@ -1160,11 +1160,10 @@ Finally, confidence in detection ‘no’ responses was marginally sensitive to 
 
 ### Evidence-weighting
 
-In Experiments 1 and 2, confidence in stimulus presence was invariant to sum evidence (overall motion energy in Exp.1, sum luminance in Exp. 2). This was surprising for two reasons. First, in both cases sum motion energy did have a significant effect on detection decisions. Second, incorporating information about sum evidence into confidence in the presence of a stimulus is rational: a bright target stimulus is more likely to be present when both target *and* non-target stimuli are bright compared to when both are dark. As we document above, however, the counterintuitive findings of Exps. 1 and 2 only partly replicated in Exp. 3: subjects still negatively weighted the luminance of the non-target stimulus (despite being irrational), but this negative effect was weaker than the positive effect of the luminance of the target stimulus, resulting in an overall positive effect of sum evidence on detection confidence.
+In Experiments 1 and 2, confidence in presence was invariant to sum evidence (overall motion energy in Exp.1, sum luminance in Exp. 2). This was surprising for two reasons. First, in both cases sum evidence did have a significant effect on detection decisions. Second, incorporating information about sum evidence into confidence in the presence of a stimulus is rational: a bright target stimulus is more likely to be present when both target *and* non-target stimuli are bright compared to when both are dark. As we document above, however, the counterintuitive findings of Exps. 1 and 2 only partly replicated in Exp. 3: subjects still negatively weighted the luminance of the non-target stimulus (despite being irrational), but this negative effect was weaker than the positive effect of the luminance of the target stimulus, resulting in an overall positive effect of sum evidence on detection confidence.
 
 To shed further light on this issue, in Exp. 3 half of the trials consisted of slightly brighter stimuli, thereby increasing statistical power for tests of the effects of sum luminance on discrimination and detection decisions and confidence.
 
-First, we established that participants were more likely to respond 'yes' on higher- compared to lower-luminance trials (`r apa_print(e3$H2)$full_result`), consistent with overall luminance providing a valid cue for signal presence. 
 
 ```{r RC-exp3-ew, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -1221,6 +1220,9 @@ e3$H5$BF <- ttestBF(e3$no_conf_PEB$PEB,rscale=e3$H1$d);
 e3$H5$t.test <- t.test(e3$no_conf_PEB$PEB)
 ```
 
+
+First, we established that participants were more likely to respond 'yes' on higher- compared to lower-luminance trials (`r apa_print(e3$H2)$full_result`), consistent with overall luminance providing a valid cue for signal presence. 
+
 We next turned to the effects of our luminance manipulation on confidence. For discrimination judgments, participants were also more confident in higher- compared to lower- luminance trials (`r apa_print(e3$H1$t.test)$full_result`), replicating a positive evidence bias for discrimination confidence. For detection judgments, in line with the reverse correlation analysis of Exp. 3 (and in contrast to the findings of Experiments 1 and 2), participants were more confident in their 'yes' responses when overall luminance was higher (`r apa_print(e3$H4$t.test)$full_result`). Our pre-registered Bayesian analysis provided strong evidence for the alternative hypothesis that detection confidence is affected by this manipulation (`r apa_print(e3$H4$BF)$statistic`). Furthermore, this increase in 'yes' response confidence as a function of the brightness manipulation was not significantly different from that observed for discrimination confidence (`r apa_print(e3$H3)$full_result`). Finally, and in line with Exp. 2, overall luminance had a significant negative effect on confidence in 'no' responses (`r apa_print(e3$H5$t.test)$full_result`), indicating that participants were more confident in the absence of a target when overall luminance was lower. 
 
 (ref:conf-boost) Difference in confidence between standard and higher-luminance trials for the three response categories (detection 'yes' and 'no' responses, and discrimination responses) in Exp. 3. Box edges and central lines represent the 25, 50 and 75 quantiles. Whiskers cover data points within four inter-quartile ranges around the median. Stars represent significance in a two-sided t-test: \*\*: p<0.01
@@ -1262,6 +1264,309 @@ knitr::include_graphics('figures/confidence_boost_enhanced_color_headings.png')
 
 ```
 
+# Experiment 4
+
+A limitation of Exp. 2 and 3, raised by an anonymous Reviewer, is that apparent asymmetries in the weighting of positive and negative evidence may result from a nonlinear mapping between luminance in RGB space and screen brightness. For example, a dark bar that is -2 RGB units from the mean does not necessarily cancel out a bright bar that is +2 RGB units from the mean, making positive evidence objectively more salient than negative evidence.
+
+To attend this concern, we include an additional Experiment where evidence is sampled from a perceptually uniform space. Specifically, Exp. 4 was similar to Exp. 3 with the exception that flickering stimuli varied in their hue rather than luminance, and where hue values were sampled from a Gaussian distribution in the CIE L\*a\*b\* colour space. Moreover, the roles of ‘target’ and ‘non-target’ hues were counterbalanced between participants, such that any built-in asymmetries in the perception of positive and negative evidence should cancel out at the group level.
+
+## Methods
+
+### Participants
+
+The research complied with all relevant ethical regulations, and was approved by the Research Ethics Committee of University College London (study ID number 1260/003). 117 participants were recruited via Prolific (prolific.co), and gave their informed consent prior to their participation. They were selected based on their acceptance rate (>95%) and for being native English speakers. Following our pre-registration, we aimed to collect data until we had reached 100 included participants based on our pre-specified inclusion criteria (see [https://osf.io/9zbpc](https://osf.io/9zbpc)). Our final data set includes observations from 100 included participants. The entire experiment took around 20 minutes to complete. Participants were paid £2.5 for their participation, equivalent to an hourly wage of £7.5.
+
+### Experimental paradigm
+
+Experiment 4 was identical to Experiment 3 with two changes. First, flickering bars were varied in hue, randomly sampled from a Gaussian distribution in the CIE L\*a\*b\* colour space, centred at $L=54$, $a=21.5$ and $b=11.5$, with a radius of 49 [@schurgin2020psychophysical]. For half of the participants, non-target hues were sampled around an orientation of 1.85 radians, with a standard deviation of 0.35 and target hues were sampled around an orientation of 2.1 with a standard deviation of 0.35. For the first group, target patches were little more orange than non-target patches, and for the second group target patches were little more green than non-target patches. To make sure non-target patches were perceived as the absence of signal relative to the background, the RSVP display was overlaid on top of a rectangle with the mean color of a non-target patch. Second, in order to avoid interference, the confidence circle was presented in gray. Third, subjects were allowed to repeat the multiple choice questions up to three times. Finally, feedback about overall performance and mean confidence in correct and incorrect responses was displayed at the end of each block.
+
+```{r RC-exp4-load-and-format-data, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+
+e4=list()
+
+#this is a hack: the hue data arrives as a python-like nested list (side, then position, then time), 
+# so to use unnest_longer I first need to change it to a R-list. 
+explode = function(hue_string) {
+  return(gsub("\\[|\\]", "", hue_string)%>%strsplit(','))
+}
+
+flicker_mu <- c(1.85,2.1);
+flicker_delta <- c(0.25,-0.25)
+
+
+e4$raw_df <- read_csv('../experiments/Experiment4/data/jatos_results_batch1.csv', lazy=FALSE); 
+
+e4$include_detection <- e4$raw_df %>%
+  filter(trial_type=='flicker' & test_part=='test' & detection==1) %>%
+  mutate(s=as.numeric(factor(participant_number))) %>%
+  group_by(s)%>%
+  summarise(acc=mean(correct),
+            followed_detection=followed_detection[1],
+            followed_discrimination=followed_discrimination[1]) %>%
+  filter(acc>=0.55 & followed_detection & followed_discrimination) %>%
+  pull(s)
+
+e4$include_discrimination <- e4$raw_df %>%
+  filter(trial_type=='flicker' & test_part=='test' & detection==0) %>%
+  mutate(s=as.numeric(factor(participant_number))) %>%
+  group_by(s)%>%
+  summarise(acc=mean(correct),
+            followed_detection=followed_detection[1],
+            followed_discrimination=followed_discrimination[1]) %>%
+  filter(acc>=0.55 & followed_detection & followed_discrimination) %>%
+  pull(s)
+
+e4$processed_df <- e4$raw_df %>%
+  filter(trial_type=='flicker' & test_part=='test') %>%
+  mutate(s=as.numeric(factor(participant_number)),
+         task=ifelse(detection==1,'detection','discrimination'),
+         RT=RT-480, #stimulus duration
+         include=ifelse(detection==1, s %in% e4$include_detection & RT>=200, 
+                        s %in% e4$include_discrimination) & RT>=200) %>%
+  group_by(s)%>%
+  mutate(index=seq(n()),
+         block=ceiling(index/28)) %>%
+  group_by(s,detection) %>%
+  mutate(trial=seq(n()))%>%
+  dplyr::select(s,colormapping, task,trial,index, RT,signal_presence, response, special_side, conf_RT, 
+                confidence, hue, trial_index, correct,block, boost, include) %>%
+  mutate(hue=explode(hue))%>%
+  unnest_longer(hue) %>%
+  mutate(hue=round(as.numeric(hue)*100)/100) %>%
+  group_by(s,task,trial_index) %>%
+  mutate(side=c(rep(0,48),rep(1,48)),
+         timepoint=rep(1:12,8),
+         eccentricity = rep(c(rep(1,12),rep(2,12),rep(3,12),rep(4,12)),2)) %>%
+  ungroup() %>%
+  mutate(
+    normal_hue = (hue-flicker_mu[colormapping])/flicker_delta[colormapping],
+    normal_boost = (boost/flicker_delta[colormapping])
+  ) 
+
+
+e4$df <- e4$processed_df %>%
+  filter(include==TRUE)%>%
+  rename(subj_id = s,
+         trial_id = trial_index) %>%
+  mutate(detection = ifelse(task=='detection',1,0),
+         special_side=ifelse(special_side=='right',1,0),
+         signal=signal_presence,
+         detection=as.factor(detection),
+         correct=as.factor(correct),
+         response=as.factor(ifelse(response %in% c('y','f'),1,0)),
+         subj_id=as.factor(subj_id)) %>%
+  ungroup() %>%
+  dplyr::select(subj_id,detection,trial_id,
+                RT,signal,correct,special_side,
+                response,conf_RT,confidence,
+                normal_hue,side,timepoint,
+                eccentricity,trial, normal_boost)
+
+e4$trial_df <- e4$df %>%
+  group_by(subj_id, trial_id) %>%
+  summarise(
+    detection = detection[side==1 & timepoint==1 & eccentricity == 1],
+    special_side = special_side[side==1 & timepoint==1 & eccentricity == 1],
+    normal_boost = normal_boost[side==1 & timepoint==1 & eccentricity == 1],
+    signal = signal[side==1 & timepoint==1 & eccentricity == 1],
+    response = response[side==1 & timepoint==1 & eccentricity == 1],
+    RT = RT[side==1 & timepoint==1 & eccentricity == 1], # stimulus duration
+    confidence = confidence[side==1 & timepoint==1 & eccentricity == 1],
+    correct = correct[side==1 & timepoint==1 & eccentricity == 1],
+    trial_number = trial[side==1 & timepoint==1 & eccentricity == 1],
+    conf_bi = ifelse(
+      response==1, 
+      as.numeric(confidence),
+      -1*as.numeric(confidence)),
+    hue_0=mean(normal_hue[side==0 & timepoint<8]),
+    hue_1=mean(normal_hue[side==1 & timepoint < 8]))%>%
+  group_by(subj_id) %>%
+  mutate(
+    conf_discrete = ntile(confidence,20) %>%
+      factor(levels=1:21),
+    logRT=log(RT));
+
+e4$detection_df <- e4$trial_df %>%
+  filter(detection==1) %>%
+  mutate(stimulus=signal);
+
+e4$discrimination_df <- e4$trial_df %>%
+  filter(detection==0) %>%
+  mutate(stimulus = special_side);
+```
+
+
+```{r RC-exp4-general-stats, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+e4 <- e4 %>% 
+  generalStats2Tasks() %>%
+  testAUC() %>%
+  testzROC2tasks();
+
+
+e4$zROC <- rbind(e4$detection_zROC%>%mutate(detection=1),
+                 e4$discrimination_zROC%>%mutate(detection=0));
+
+e4$zROC_contast_rsquare <- e4$zROC%>%group_by(subj_id)%>%summarize(fit_diff=r.squared[detection==1]-r.squared[detection==0])
+```
+
+## Results
+
+
+### Decision accuracy
+
+Overall proportion correct was `r e4$task_stats%>%filter(detection==0)%>%pull(acc)%>%mean()%>%printnum()` in the discrimination and `r e4$task_stats%>%filter(detection==1)%>%pull(acc)%>%mean()%>%printnum()` in the detection task. Performance for discrimination was significantly higher than for detection (`r t.test(e4$task_stats%>%filter(detection==0)%>%pull(acc), e4$task_stats%>%filter(detection==1)%>%pull(acc))%>%apa_print()%>%'$'(full_result)`), as expected. 
+
+### Overall properties of decision and confidence distributions
+
+Similar to Exp. 1-3, participants were more likely to respond 'yes' than 'no' in the detection task (mean proportion of 'yes' responses: `r t.test(e4$detection_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). We did not observe a consistent response bias in discrimination (mean proportion of 'right' responses: `r t.test(e4$discrimination_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). 
+
+As in both Exp. 1 and 2, we also found behavioural asymmetries between the two detection responses (see Fig. \@ref(fig:RC-exp4-asymmetries)), with 'yes' responses being faster (median difference of `r e4$detection_stats$contrast_responses%>%pull(RT)%>%median()%>%abs()%>%printnum()` ms) and accompanied by higher levels of confidence (mean difference of `r e4$detection_stats$contrast_responses$confidence%>%mean()%>%printnum()` on a 0-1 scale). A mean difference of `r e4$AUC%>%filter(detection==1)%>%pull(metacognitive_asymmetry)%>%mean()%>%printnum()` in metacognitive sensitivity (AUC units) was not significant. For a detailed statistical analysis see Appendix \@ref(appRC:asymmetries4).
+
+(ref:exp4-asymmetries) Behavioural asymmetries in metacognitive sensitivity, response time, and overall confidence, in Exp. 4. Same conventions as in Fig. \@ref(fig:RC-exp1-asymmetries).
+
+```{r RC-exp4-asymmetries, echo=FALSE, message=FALSE, fig.cap= "(ref:exp4-asymmetries)"}
+# plotAllAsymmetries(e4,'figures/RC-exp4-asymmetries.pdf');
+knitr::include_graphics("figures/RC-exp4-asymmetries-enhanced.png")
+```
+
+### Reverse correlation
+
+```{r RC-exp4-discrimination-RC, echo=FALSE, message=FALSE, results='hide', warning=FALSE, fig.show='hide'}
+
+e4$demeaned_df <- e4$df %>%
+  mutate(
+    evidence = ifelse(side==special_side & signal==1,
+                      normal_hue - normal_boost - 1,
+                      normal_hue - normal_boost))
+
+e4$discRCdf <- e4$demeaned_df %>%
+  filter(detection==0) %>%
+  mutate(obj_side=factor(ifelse(side==special_side, 'true','opposite'),
+                         levels=c('true','opposite')),
+         side=ifelse(response==side,'chosen','unchosen')) %>%
+  group_by(subj_id) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    time=(timepoint-1)*40) 
+
+e4 <- e4 %>% 
+  getDiscriminationKernels() %>%
+  contrastDiscriminationKernels() %>%
+  plotDiscriminationKernels('exp4',c(0,440),c(-0.4,0.8))
+```
+
+#### Discrimination decisions
+
+Discrimination decisions were sensitive to relative evidence during the first 300 milliseconds of the trial (`r `apa_print(e4$RC$accuracy_rel300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp4-RC)A). Sum evidence had a positive effect on discrimination decisions, such that subjects were more likely to correctly select the target stimulus when the overall hue of the both stimuli together was closer to the target hue (`r `apa_print(e4$RC$accuracy_sum300$diff%>%t.test())$statistic`).
+
+#### Discrimination confidence 
+
+Decision confidence was sensitive to positive (`r apa_print(e4$RC$confidence_pos300$diff%>%t.test())$statistic`) and negative (`r apa_print(e4$RC$confidence_neg300$diff%>%t.test())$statistic`) evidence within the first 300 milliseconds (see Fig. \@ref(fig:RC-exp4-RC)B). The effect of sum evidence on decision confidence was only marginally significant (`r apa_print(e4$RC$confidence_sum300$diff%>%t.test())$statistic`). An effect of sum evidence was found when directly contrasting high- and low- evidence trials, as we show in the “Evidence-weighting” Section below.
+
+```{r RC-exp4-signal-RC, echo=FALSE, message=FALSE, warning=FALSE, results='hide', fig.show='hide'}
+
+e4$signalRCdf <- e4$demeaned_df %>%
+  filter(detection==1 & signal==1) %>%
+  mutate(side=factor(ifelse(side==special_side, 'true','opposite'),
+                         levels=c('true','opposite'))) %>%
+  group_by(subj_id,response) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    time=(timepoint-1)*40) 
+
+e4 <- e4 %>% 
+  getDetectionSignalKernels() %>%
+  contrastDetectionSignalKernels() %>%
+  plotDetectionSignalKernels('exp3',c(0,440),c(-0.2,0.6))
+```
+
+#### Detection
+
+Participants’ detection decisions were sensitive to fluctuations in the hue of the target stimulus (`r apa_print(e4$RC$signal_decision_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp4-RC)D, blue curve). Fluctuations in the hue of the non-target stimulus had the opposite effect on detection decision, replicating the results of Exp. 1-3 (`r apa_print(e4$RC$signal_decision_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp4-RC)D, red curve).
+
+Confidence in detection ‘yes’ responses was positively sensitive to fluctuations in the hue of the target (`r apa_print(e4$RC$signal_confidenceYes_pos300$diff%>%t.test())$statistic`) and negatively sensitive to fluctuations in the hue of the non-target stimulus (`r apa_print(e4$RC$signal_confidenceYes_neg300$diff%>%t.test())$statistic`; see Fig. 13F). Similar to Exp. 3, here too sum evidence (deviation from the background hue toward the target hue) had a significant positive effect on decision confidence when reporting target presence (‘yes’ responses; `r apa_print(e4$RC$signal_confidenceYes_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp4-RC)G).
+
+Finally, confidence in detection ‘no’ responses was sensitive to random fluctuations in the hue of the target, such that participants were more confident in the absence of a signal when the target stimulus was closer in hue to the background (`r apa_print(e4$RC$signal_confidenceNo_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp4-RC)H). Sum evidence (the overall hue of the display) had a marginal negative effect on confidence in absence (`r apa_print(e4$RC$signal_confidenceNo_sum300$diff%>%t.test())$statistic`). Relative evidence and negative evidence had no significant effects on confidence in detection ‘no’ responses (p's > 0.3).
+
+### Evidence-weighting
+
+```{r RC-exp4-ew, echo=FALSE, warning=FALSE, message=FALSE}
+
+e4$discrimination_conf_PEB <- e4$trial_df %>%
+  filter(detection==0) %>%
+  group_by(subj_id, normal_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[normal_boost==0.4]-confidence[normal_boost==0]);
+
+e4$H1$t.test <- t.test(e4$discrimination_conf_PEB$PEB);
+e4$H1$d <- cohensD(e4$discrimination_conf_PEB$PEB);
+
+e4$detection_dec_PEB <- e4$trial_df %>%
+  filter(detection==1) %>%
+  group_by(subj_id, normal_boost) %>%
+  summarise(P=mean(as.numeric(as.character(response))))%>%
+  group_by(subj_id)%>%
+  summarise(PEB=P[normal_boost==0.4]-P[normal_boost==0]);
+
+e4$H2 <- t.test(e4$detection_dec_PEB$PEB);
+
+e4$PEB_interaction <- e4$trial_df %>%
+  filter(correct==1 & signal==1) %>%
+  group_by(subj_id, detection, normal_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id,detection) %>%
+  summarise(PEB=confidence[normal_boost==0.4]-confidence[normal_boost==0]) %>%
+  group_by(subj_id) %>%
+  summarise(PEB_diff = PEB[detection==0]-PEB[detection==1]); 
+
+e4$H3 <- t.test(e4$PEB_interaction$PEB_diff);
+
+e4$yes_conf_PEB <- e4$trial_df %>%
+  filter(detection==1 & response==1) %>%
+  group_by(subj_id, normal_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[normal_boost==0.4]-confidence[normal_boost==0]);
+
+
+e4$H4$BF <- ttestBF(e4$yes_conf_PEB$PEB,rscale=e4$H1$d);
+e4$H4$t.test <- t.test(e4$yes_conf_PEB$PEB)
+
+
+e4$no_conf_PEB <- e4$trial_df %>%
+  filter(detection==1 & response==0) %>%
+  group_by(subj_id, normal_boost) %>%
+  summarise(confidence=mean(confidence)) %>%
+  group_by(subj_id)%>%
+  summarise(PEB=confidence[normal_boost==0.4]-confidence[normal_boost==0]);
+
+e4$H5$BF <- ttestBF(e4$no_conf_PEB$PEB,rscale=e4$H1$d);
+e4$H5$t.test <- t.test(e4$no_conf_PEB$PEB)
+
+```
+
+As in Exp. 2, on half of the trials (‘high-evidence’ trials), the hue of both patches was slightly shifted in the direction of the target stimulus (that is, made more green if the target stimulus was greener than the non-target stimulus, or more orange otherwise). This allowed us to directly measure the effect of sum evidence on detection decisions, and on detection and discrimination confidence rating. In summary, we obtained a similar pattern to Exp. 3: on high-evidence trials, participantns were were more likely to respond ‘yes’ in the detection task `r apa_print(e4$H2)$full_result`), more confident in their discrimination judgments (`r apa_print(e4$H1$t.test)$full_result`), more confident in their detection ‘yes’ responses (`r apa_print(e4$H4$t.test)$full_result`), and less confident in detection ‘no’ responses `r apa_print(e4$H5$t.test)$full_result`). Our pre-registered Bayesian analysis provided strong evidence for the alternative hypothesis that detection confidence is affected by sum evidence (`r apa_print(e4$H4$BF)$statistic`). One difference relative to Exp. 3 is that in Exp. 4 the increase in ‘yes’ response confidence as a function of the hue manipulation was significantly stronger than that observed for discrimination confidence (`r apa_print(e4$H3)$full_result`).
+
+# Discussion
+
+In four experiments, we compared the perceptual drivers of decisions and confidence ratings in discrimination and detection, matched for difficulty (Exp. 1) and signal strength (Exp. 2-4). In order to measure the contribution of perceptual evidence to confidence in detection and discrimination judgments, we followed @zylberberg2012construction and applied reverse correlation analysis to noisy stimuli in perceptual decision making tasks. We fully replicated the main results of Zylberberg and colleagues: decisions and confidence were affected by perceptual evidence in the first 300 milliseconds of the trial, peaking at around 200 milliseconds. We also successfully replicated a positive evidence bias (PEB) for discrimination confidence: confidence in the discrimination task was more affected by supporting than by conflicting evidence, as expected from detection decisions. This effect was qualitatively accounted for by two Bayes-rational decision making models: a stimulus-dependent noise model (inspired by @miyoshi2020decision), and a goal-directed attention model inspired by @sepulveda2020visual.
+
+The same two models also made predictions for the detection task: when inferring presence, decisions and confidence ratings should positively weigh evidence for both alternatives (e.g., motion energy to the right and to the left). Paradoxically, however, in the detection task subjects adopted a discrimination-like disposition, and negatively weighted evidence in the non-signal channel. In Exp. 1 and 2, this negative weighting of evidence in the non-signal channel was strong enough to bring to the total effect of sum evidence on detection confidence down to zero. Although experiments 3 and 4 did show an effect of sum evidence on detection confidence, the negative weighting of evidence in the non-signal channel remained. Overall, subjects incorporated detection-relevant evidence into their confidence in discrimination judgments, and discrimination-relevant evidence to their detection judgments and confidence ratings.
+
+What drives these discrimination-like evidence weighting profiles in detection? One possibility is that subjects do not have access to a fixed reference value (purely random motion in Exp. 1, mid-gray luminance in Exp 2 and 3, or the non-signal hue in Exp. 4). This can be due to limitations on working memory, or due to global fluctuations in brain activity that do not allow access to absolute values, but only to relative ones. According to this account, subjects’ decisions are constrained to be based on a direct contrast between two currently available evidence channels. This account can be easily ruled out, as sum evidence, which is only defined relative to a reference value, played a significant role in subjects’ decisions and confidence ratings. Furthermore, in Exp. 2-4, the non-signal value served as a background color, effectively making it a third sensory channel that is available to subjects just as the stimuli themselves.
+
+An alternative explanation is that in Exp 3 and 4 our evidence-boost manipulation rendered it rational for subjects to focus on a contrast between the two sensory channels. If on a random subset of trials both stimuli are made brighter, focusing on overall brightness is not as informative as focusing on a contrast between the brightness of the two stimuli. This account fails to explain, however, the emergence of a negative effect of evidence in the non-signal channel in Exp. 1 and 2, where a rational agent should have positively weighted evidence from both channels.
+
+Finally, it may be that evidence accumulation in detection and discrimination builds on shared processes and internal representations. Outside of a lab setting, detectability and discriminability mostly go hand in hand; the farther away from ‘nothing’ a representation is, the more distinct and differentiated from other representations it becomes. Given these meta-level expectations about the distribution of evidence in the world, the overall availability of evidence may be a valid cue for confidence in discrimination judgments, and conversely, asymmetries in the availability of evidence for two competing hypotheses may serve as a valid cue for the presence of signal in one of the channels.
+
+# Conclusion
+
+In four experiments, we replicated findings of detection-like evidence weighting in discrimination confidence. Our findings were accounted for by models that attribute this effect to asymmetries in the distributions of sensory noise or allocation of attention. The same models could not account for discrimination-like evidence weighting in detection decision and confidence. We suggest that our findings, as well as previous reports of a positive evidence bias in discrimination confidence, may be driven by shared representational resources for detection and discrimination.
 # References
 
 \begingroup
