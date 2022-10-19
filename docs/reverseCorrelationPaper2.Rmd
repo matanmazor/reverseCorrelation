@@ -95,7 +95,7 @@ When considering two alternative hypotheses, the probability of the chosen hypot
 
 While sum evidence is irrelevant to discrimination decisions between two symmetrical hypotheses (e.g., kitchen or living room), it is highly informative with respect to detection decisions about the presence or absence of a signal. For example, when deciding that an ant colony is nesting in the house, the total number of ants found in both rooms is highly relevant, even more so than the difference between the number of ants found in the kitchen or living room (see Fig. \@ref(fig:RC-2d-models) for a signal detection formulation).
 
-(ref:RC-2dmodels) Discrimination and detection in a two-dimensional Signal Detection Theory model. Left: in a two-dimensional SDT model, evidence $e$ is sampled from one of two Gaussian distributions (here centered at (0,1) and (1,0)). We define relative evidence as $e_{S1}-e_{S2}$ and sum evidence as $e_{S1}+e_{S2}$. Circles represent contours of two-dimensional distributions. Center and Left: response and confidence accuracy are maximized when based on a log-likelihood ratio for the two stimulus categories. Center: in discrimination, this yields optimal decision and confidence criteria that are based on relative evidence (distance from the main diagonal), irrespective of sum evidence. Right: in detection, this yields optimal decision and confidence that are based on a non-linear interaction between relative and sum evidence. The third circle centred at (0,0) represents the two-dimensional distribution of percepts in the absence of stimuli.
+(ref:RC-2dmodels) Discrimination and detection in a two-dimensional Signal Detection Theory model. Left: in a two-dimensional SDT model, evidence $e$ is sampled from one of two Gaussian distributions (here centered at (0,1) and (1,0)). We define relative evidence as $e_{S1}-e_{S2}$ and sum evidence as $e_{S1}+e_{S2}$. Circles represent contours of two-dimensional distributions. Center and Left: decision and confidence accuracy are maximized when based on a log-likelihood ratio for the two stimulus categories. Center: in discrimination, this yields optimal decision and confidence criteria that are based on relative evidence (distance from the main diagonal), irrespective of sum evidence. Right: in detection, this yields optimal decision and confidence that are based on a non-linear interaction between relative and sum evidence. The third circle centred at (0,0) represents the two-dimensional distribution of percepts in the absence of stimuli.
 
 ```{r RC-2d-models, fig.cap="(ref:RC-2dmodels)"}
 
@@ -627,7 +627,7 @@ e1 <- e1 %>%
   testzROC2tasks();
 ```
 
-### Response accuracy
+### Decision accuracy
 
 Overall proportion correct was `r e1$task_stats_unfiltered%>%filter(detection==0)%>%pull(acc)%>%mean()%>%printnum()` in the discrimination and `r e1$task_stats_unfiltered%>%filter(detection==1)%>%pull(acc)%>%mean()%>%printnum()` in the detection task. Performance for discrimination was significantly higher than for detection (`r t.test(e1$task_stats_unfiltered%>%filter(detection==0)%>%pull(acc), e1$task_stats_unfiltered%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(full_result)`). This difference in task performance reflected a slower convergence of the staircasing procedure for the discrimination task during the first session. When discarding all data from the first session and analyzing only data from the last three sessions (1800 trials per participant), task performance was equated between the two tasks at the group level (`r t.test(e1$task_stats%>%filter(detection==0)%>%pull(acc), e1$task_stats%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(full_result)`; `r ttestBF(e1$task_stats%>%filter(detection==0)%>%pull(acc), e1$task_stats%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(statistic)`).  In order to avoid confounding differences between discrimination and detection decision and confidence profiles with more general task performance effects, the first session was excluded from all subsequent analyses.
 
@@ -646,7 +646,7 @@ Replicating previous studies [@meuwese2014subjective; @mazor2020distinct; @kelli
 knitr::include_graphics("figures/RC-exp1-asymmetries-enhanced.png")
 ```
 
-## Reverse correlation
+### Reverse correlation
 
 
 ```{r RC-exp1-discrimination-RC, echo=FALSE, message=FALSE, results='hide', warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1", fig.show='hide'}
@@ -688,7 +688,7 @@ e1$discrimination_confidence_kernel <- e1$discrimination_confidence_kernel %>%
 e1 %>% plotDiscriminationKernels('exp1',c(0,750),c(-0.3,0.4))
 ```
 
-### Discrimination
+#### Discrimination
 
 Using reverse correlation we quantified the effect of random fluctuations in motion energy on the probability of correctly identifying the true direction of motion, and on the temporal dynamics of decision formation. Following @zylberberg2012construction, we focused our analysis on the first 300 ms of the trial. Participants’ discrimination responses were significantly affected by the relative evidence for the true direction of motion compared to the opposite direction (`r apa_print(e1$RC$accuracy_rel300$diff%>%t.test())$statistic`), whereas sum evidence (the total amount of energy in both directions) had no effect on discrimination accuracy (`r apa_print(e1$RC$accuracy_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)A). This is consistent with a symmetric weighting of positive and negative evidence in decision formation, and with the predictions of all four models.
 
@@ -733,7 +733,7 @@ e1$signal_confidence_kernel <- e1$signal_confidence_kernel %>%
 e1 %>% plotDetectionSignalKernels('exp1',c(0,750),c(-0.3,0.4))
 ```
 
-### Detection
+#### Detection
 
 Carrying out an analogous reverse correlation analysis for detection introduces a challenge: while ‘no’ responses reflect a belief in the absence of any coherent motion, ‘yes’ responses can result from detection of any type of coherent motion going in either direction (or both). We chose to have two possible motion directions in the detection task in order to prevent participants from making ‘no’ responses based on significant motion in an unexpected direction. While this choice ensured that participants cannot accumulate evidence for absence, it also made the reverse correlation analysis more difficult, as we did not have full access to participants’ beliefs about the stimulus when they responded ‘yes’.
 
@@ -778,7 +778,7 @@ Importantly, unlike the lab-based experiment, there was no calibration of diffic
 
 ### Trial structure
 
-In discrimination blocks, trial structure closely followed Exp. 2 from @zylberberg2012construction, with a few adaptations. Following a fixation cross (500 ms), two sets of four adjacent vertical gray bars were presented as a rapid serial visual presentation (RSVP; 12 frames, presented at 25Hz), displayed to the left and right of the fixation cross (see Fig. 7). On each frame, the luminance of each bar was randomly sampled from a Gaussian distribution with a standard deviation of 10/255 units in the standard RGB 0-255 coordinate system. For one set of bars, this Gaussian distribution was centered at the same luminance value as the background (128/255). For the other set, it was centered at 133/255, making it brighter on average. Participants then reported which of the two sets was brighter on average using the ‘D’ and ‘F’ keys on the keyboard. After their response, they rated their confidence on a continuous scale, by controlling the size of a colored circle with their mouse. High confidence was mapped to a big, blue circle, and low confidence to a small, red circle. To discourage hasty confidence ratings, the confidence rating scale stayed on the screen for at least 2000 milliseconds. Feedback about response accuracy was delivered after the confidence rating phase.
+In discrimination blocks, trial structure closely followed Exp. 2 from @zylberberg2012construction, with a few adaptations. Following a fixation cross (500 ms), two sets of four adjacent vertical gray bars were presented as a rapid serial visual presentation (RSVP; 12 frames, presented at 25Hz), displayed to the left and right of the fixation cross (see Fig. 7). On each frame, the luminance of each bar was randomly sampled from a Gaussian distribution with a standard deviation of 10/255 units in the standard RGB 0-255 coordinate system. For one set of bars, this Gaussian distribution was centered at the same luminance value as the background (128/255). For the other set, it was centered at 133/255, making it brighter on average. Participants then reported which of the two sets was brighter on average using the ‘D’ and ‘F’ keys on the keyboard. After their response, they rated their confidence on a continuous scale, by controlling the size of a colored circle with their mouse. High confidence was mapped to a big, blue circle, and low confidence to a small, red circle. To discourage hasty confidence ratings, the confidence rating scale stayed on the screen for at least 2000 milliseconds. Feedback about decision accuracy was delivered after the confidence rating phase.
 
 (ref:RC-design2) Task design for Experiment 2. In both tasks, participants viewed 480 milliseconds of two flickering patches, after which they made a keyboard response to indicate which of the patches was brighter (discrimination) or whether any of the patches was brighter than the background (detection).
 
@@ -793,6 +793,171 @@ Detection blocks were similar to discrimination blocks, with the exception that 
 ### Randomization
 
 The order and timing of experimental events was determined pseudo-randomly by the Mersenne Twister pseudorandom number generator, initialized in a way that ensures registration time-locking [@mazor2019novel]. 
+
+
+## Results
+
+```{r RC-exp2-load-and-format-data, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+
+e2=list()
+
+e2$df <- read_csv('../experiments/Experiment2/data/Flicker.csv', lazy=FALSE) %>%
+  group_by(s,task,trial_index) %>%
+  mutate(side=c(rep(0,48),rep(1,48)),
+         timepoint=rep(1:12,8), 
+         eccentricity = rep(c(rep(1,12),rep(2,12),rep(3,12),rep(4,12)),2)) %>%
+  rename(subj_id = s,
+         trial_id = trial_index) %>%
+  mutate(detection = ifelse(task=='detection',1,0),
+         bright_side=ifelse(bright_side=='right',1,0),
+         signal=signal_presence,
+         detection=as.factor(detection),
+         response=as.factor(response),
+         correct=as.factor(correct),
+         subj_id=as.factor(subj_id)) %>%
+  ungroup() %>%
+  dplyr::select(subj_id,detection,trial_id,
+                RT,signal,correct,bright_side,
+                response,conf_RT,confidence,
+                luminance,side,timepoint,
+                eccentricity,trial)
+
+
+e2$trial_df <- e2$df %>%
+  group_by(subj_id, trial_id) %>%
+  summarise(
+    detection = detection[side==1 & timepoint==1 & eccentricity == 1],
+    bright_side = bright_side[side==1 & timepoint==1 & eccentricity == 1],
+    signal = signal[side==1 & timepoint==1 & eccentricity == 1],
+    response = response[side==1 & timepoint==1 & eccentricity == 1],
+    RT = RT[side==1 & timepoint==1 & eccentricity == 1]-480, # stimulus duration
+    confidence = confidence[side==1 & timepoint==1 & eccentricity == 1],
+    correct = correct[side==1 & timepoint==1 & eccentricity == 1],
+    trial_number = trial[side==1 & timepoint==1 & eccentricity == 1],
+    conf_bi = ifelse(
+      response==1, 
+      as.numeric(confidence),
+      -1*as.numeric(confidence)),
+    luminance_0=mean(luminance[side==0 & timepoint<8]),
+    luminance_1=mean(luminance[side==1 & timepoint<8]))%>%
+  group_by(subj_id) %>%
+  mutate(
+    conf_discrete = ntile(confidence,20) %>%
+      factor(levels=1:21),
+    logRT=log(RT));
+
+e2$detection_df <- e2$trial_df %>%
+  filter(detection==1) %>%
+  mutate(stimulus=signal);
+
+e2$discrimination_df <- e2$trial_df %>%
+  filter(detection==0) %>%
+  mutate(stimulus = bright_side);
+```
+
+```{r RC-exp2-general-stats, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+
+e2 <- e2 %>% generalStats2Tasks() %>%
+  testAUC() %>%
+  testzROC2tasks();
+
+e2$zROC <- rbind(e2$detection_zROC%>%mutate(detection=1),
+                 e2$discrimination_zROC%>%mutate(detection=0));
+
+e2$zROC_contast_rsquare <- e2$zROC%>%group_by(subj_id)%>%summarize(fit_diff=r.squared[detection==1]-r.squared[detection==0])
+
+```
+
+### Decision accuracy
+
+Overall proportion correct was `r e2$task_stats%>%filter(detection==0)%>%pull(acc)%>%mean()%>%printnum()` in the discrimination and `r e2$task_stats%>%filter(detection==1)%>%pull(acc)%>%mean()%>%printnum()` in the detection task. Performance for discrimination was significantly higher than for detection (`r t.test(e2$task_stats%>%filter(detection==0)%>%pull(acc), e2$task_stats%>%filter(detection==1)%>%pull(acc), paired=TRUE)%>%apa_print()%>%'$'(full_result)`). Unlike in Exp. 1, where we aimed to control for task difficulty, here we decided to match stimulus intensity between the two tasks, so a difference between detection and discrimination performance was expected [@wickens2002elementary, 104]. 
+
+### Overall properties of decision and confidence distributions
+
+Similar to Exp. 1, participants were more likely to respond 'yes' than 'no' in the detection task (mean proportion of 'yes' responses: `r t.test(e2$detection_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). We did not observe a consistent response bias in discrimination (mean proportion of 'right' responses: `r t.test(e2$discrimination_stats$general$bias,mu=0.5)%>%apa_print()%>%'$'(full_result)`). 
+
+As in Exp. 1, we also found behavioural asymmetries between the two detection responses (see Fig. \@ref(fig:RC-exp2-asymmetries)), with 'yes' responses being faster (median difference of `r e2$detection_stats$contrast_responses%>%pull(RT)%>%median()%>%abs()%>%printnum()` ms) and accompanied by higher levels of confidence (mean difference of `r e2$detection_stats$contrast_responses$confidence%>%mean()%>%printnum()` on a 0-1 scale). Unlike in Exp. 1, here we found no evidence for a difference in metacognitive sensitivity between 'yes' and 'no' responses (mean difference of `r e2$AUC%>%filter(detection==1)%>%pull(metacognitive_asymmetry)%>%mean()%>%printnum()` in AUC units). No asymmetries were observed between the two discrimination responses. For a detailed statistical analysis see Appendix \@ref(appRC:asymmetries2).
+
+(ref:exp2-asymmetries) Behavioural asymmetries in metacognitive sensitivity, response time, and overall confidence, in Exp. 2. Same conventions as in Fig. \@ref(fig:RC-exp1-asymmetries).
+
+```{r RC-exp2-asymmetries, echo=FALSE, message=FALSE, fig.scap="Behavioural asymmetries in metacognitive sensitivity, response time, and overall confidence, in Exp. 2",  fig.cap= "(ref:exp2-asymmetries)"}
+# plotAllAsymmetries(e2,'figures/RC-exp2-asymmetries.pdf');
+knitr::include_graphics("figures/RC-exp2-asymmetries-enhanced.png")
+```
+
+### Reverse correlation 
+
+Stimuli in Exp. 2 consisted of two flickering patches, each comprising 4 gray bars presented for 12 frames. Together, this summed to 96 random luminance values per trial, which we subjected to reverse correlation analysis, following the analysis procedure of Exp 2. in @zylberberg2012construction.  
+
+
+```{r RC-exp2-discrimination-RC, echo=FALSE, message=FALSE, results='hide', warning=FALSE, fig.show='hide'}
+
+e2$demeaned_df <- e2$df %>%
+  mutate(
+    evidence = ifelse(side==bright_side & signal==1,
+                      (luminance-133)/5,
+                      (luminance-128)/5)
+  )
+
+e2$discRCdf <- e2$demeaned_df %>%
+  filter(detection==0) %>%
+  mutate(obj_side=factor(ifelse(side==bright_side, 'true','opposite'),
+                         levels=c('true','opposite')),
+         side=ifelse(response==side,'chosen','unchosen')) %>%
+  group_by(subj_id) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    time=(timepoint-1)*40) 
+
+e2 <- e2 %>% 
+  getDiscriminationKernels() %>%
+  contrastDiscriminationKernels() %>%
+  plotDiscriminationKernels('exp2',c(0,440),c(-0.4,0.7))
+```
+
+#### Discrimination decisions 
+
+First, we asked whether random fluctuations in luminance had an effect on participants’ discrimination responses. Similar to the results obtained by Zylberberg et. al., discrimination decisions were sensitive to fluctuations in relative evidence (the difference in mean luminance between the left and right stimulus) during the first 300 milliseconds of the trial (`r apa_print(e2$RC$accuracy_rel300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)A, orange curve). Furthermore, participants’ decisions were surprisingly more sensitive to negative compared to positive evidence within the same time window, resulting in a negative effect of sum evidence (`r apa_print(e2$RC$accuracy_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)A, black curve). Importantly, this negative effect of sum evidence on decision accuracy was not replicated in Exp. 3 and 4.
+
+(ref:RC-exp2-RC) Reverse correlation, Exp. 2. Same conventions as in Fig. \@ref(fig:RC-exp1-RC).
+
+```{r RC-exp2-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-exp2-RC)"}
+
+knitr::include_graphics("figures/RC/exp2/summary.png")
+```
+
+#### Discrimination confidence
+
+Similar to Exp. 1, here too we observed a significant effect of positive (`r apa_print(e2$RC$confidence_pos300$diff%>%t.test())$statistic`) and negative (`r apa_print(e2$RC$confidence_neg300$diff%>%t.test())$statistic`) evidence on decision confidence within the first 300 milliseconds of the stimulus (see Fig. \@ref(fig:RC-exp2-RC)B). Replicating @zylberberg2012construction, this effect was significantly stronger for the chosen stimulus, producing an effect of sum evidence on decision confidence that is consistent with a positive evidence bias(`r apa_print(e2$RC$confidence_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)C, black curve).
+
+```{r RC-exp2-signal-RC, echo=FALSE, message=FALSE, warning=FALSE, results='hide', fig.show='hide'}
+
+e2$signalRCdf <- e2$demeaned_df %>%
+  filter(detection==1 & signal==1) %>%
+  mutate(side=factor(ifelse(side==bright_side, 'true','opposite'),
+                         levels=c('true','opposite'))) %>%
+  group_by(subj_id,response) %>%
+  mutate(median_confidence=median(confidence)) %>%
+  ungroup() %>%
+  mutate(
+    binaryconf = ifelse(confidence>=median_confidence, 1, 0),
+    time=(timepoint-1)*40) 
+
+e2 <- e2 %>% 
+  getDetectionSignalKernels() %>%
+  contrastDetectionSignalKernels() %>%
+  plotDetectionSignalKernels('exp2',c(0,440),c(-0.4,0.7))
+```
+
+#### Detection
+
+Participants’ detection decisions were sensitive to fluctuations in the luminance of the target stimulus, such that ‘yes’ responses were associated with a brighter target stimulus (`r apa_print(e2$RC$signal_decision_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)D, blue curve). Similar to Exp. 1, and in contrast to the behaviour of Bayes-rational simulated agents, the luminance of the non-target stimulus had a negative effect on the probability of responding ‘yes’ (`r apa_print(e2$RC$signal_decision_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)D, red curve).
+
+Confidence in detection ‘yes’ responses was similarly sensitive to fluctuations in the luminance of the target stimulus (`r apa_print(e2$RC$signal_confidenceYes_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)F, blue curve). Again, brighter non-target stimuli made participants less, rather than more, confident in the presence of a signal (`r apa_print(e2$RC$signal_confidenceYes_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)F, red curve). As in Exp. 1, here too sum evidence (overall luminance) had no significant effect on confidence in detection ‘yes’ responses (`r apa_print(e2$RC$signal_confidenceYes_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp2-RC)G, black curve). This surprising result was not replicated in Experiments 3 and 4.
+
+Finally, confidence in detection ‘no’ responses was sensitive to random fluctuations in the luminance of the target, such that participants were more confident in the absence of a signal when the target stimulus was darker (t(96)=-2.28, p=.025; see Fig. @ref(fig:RC_exp2-RC)G). The overall luminance of the display also had a negative effect on confidence in detection ‘no’ responses (`r apa_print(e2$RC$signal_confidenceNo_sum300$diff%>%t.test())$statistic`; see Fig. @ref(fig:RC-exp2-RC)I). The luminance of the non-target stimulus (`r apa_print(e2$RC$signal_confidenceNo_neg300$diff%>%t.test())$statistic`) and the difference in luminance between the two stimuli (`r apa_print(e2$RC$signal_confidenceNo_rel300$diff%>%t.test())$statistic`) had no significant effects on confidence in detection ‘no’ responses.
 
 
 # References
