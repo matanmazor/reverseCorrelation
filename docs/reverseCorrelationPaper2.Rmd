@@ -649,7 +649,7 @@ knitr::include_graphics("figures/RC-exp1-asymmetries-enhanced.png")
 ## Reverse correlation
 
 
-```{r RC-exp1-discrimination-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1"}
+```{r RC-exp1-discrimination-RC, echo=FALSE, message=FALSE, results='hide', warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1", fig.show='hide'}
 
 e1$discRCdf <- e1$df %>%
   filter(detection==0 & 
@@ -694,7 +694,7 @@ Using reverse correlation we quantified the effect of random fluctuations in mot
 
 We then turned to the contribution of motion energy to subjective confidence ratings. The median confidence rating in each experimental session was used to split all motion energy vectors into four groups, according to decision (chosen or unchosen directions) and confidence level (high or low). Confidence kernels for the chosen and unchosen directions were then extracted by subtracting the mean low-confidence from the mean high-confidence vectors for both the chosen and unchosen directions. Motion energy in the chosen direction (positive evidence) significantly increased confidence (`r apa_print(e1$RC$confidence_pos300$diff%>%t.test())$statistic`), but we found no significant decrease in confidence with stronger motion energy in the opposite direction (negative evidence; `r apa_print(e1$RC$confidence_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)B). Equivalently, both relative and sum evidence positively contributed to decision confidence (relative evidence: `r apa_print(e1$RC$confidence_rel300$diff%>%t.test())$statistic`; sum evidence: `r apa_print(e1$RC$confidence_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)C). This is a replication of the Positive Evidence Bias observed in @zylberberg2012construction, and consistent with the predictions of the stimulus-dependent noise and goal-directed attention models.
 
-```{r RC-exp1-signal-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1"}
+```{r RC-exp1-signal-RC, echo=FALSE, message=FALSE, warning=FALSE, results='hide', fig.cap="(ref:exp1-discrimination)", fig.scap="Reverse correlation of discrimination trials, Exp. 1", fig.show='hide'}
 
 e1$signalRCdf <- e1$df %>%
   filter(detection==1 & 
@@ -703,7 +703,7 @@ e1$signalRCdf <- e1$df %>%
   dplyr::select(-c('energyDown','energyUp'))%>%
   pivot_longer(cols=starts_with('energy'),values_to='energy',names_to='measured_direction')%>%
   mutate(measured_direction=ifelse(measured_direction=='energyRight',0,1),
-         side=ifelse(factor(measured_direction==direction, 'true','opposite'),
+         side=factor(ifelse(measured_direction==direction, 'true','opposite'),
                      levels=c('true','opposite')),
          session = round(trial_number/300)) %>%
   group_by(subj_id, session,response) %>%
@@ -732,6 +732,68 @@ e1$signal_confidence_kernel <- e1$signal_confidence_kernel %>%
 
 e1 %>% plotDetectionSignalKernels('exp1',c(0,750),c(-0.3,0.4))
 ```
+
+### Detection
+
+Carrying out an analogous reverse correlation analysis for detection introduces a challenge: while ‘no’ responses reflect a belief in the absence of any coherent motion, ‘yes’ responses can result from detection of any type of coherent motion going in either direction (or both). We chose to have two possible motion directions in the detection task in order to prevent participants from making ‘no’ responses based on significant motion in an unexpected direction. While this choice ensured that participants cannot accumulate evidence for absence, it also made the reverse correlation analysis more difficult, as we did not have full access to participants’ beliefs about the stimulus when they responded ‘yes’.
+
+In order to approximate participants’ belief states during ‘yes’ responses, we focused our analysis on trials in which coherent motion was presented in one of the two directions (signal trials). We then asked whether fluctuations in the true and opposite directions of motion contributed to detection decision and confidence. This was done by subtracting the motion energy vectors for ‘yes’ and ‘no’ responses in the true and opposite motion directions.
+
+(ref:RC-exp1-RC) Reverse correlation, Exp. 1. A: the effect of relative (black curve) and sum (orange curve) evidence on discrimination decision. Note that relative evidence here is defined with respect to the true direction of motion, not participants’ decisions. B: the effect of evidence for the chosen (green curve) and unchosen (purple curve) alternative on discrimination confidence. C: the effect of sum and relative evidence (defined with respect to participants’ decisions) on discrimination confidence. Panels D, F and H: The effect of evidence for the true direction of motion (blue curve) and for the opposite direction of motion (red curve) on detection decisions, confidence in yes responses, and confidence in no responses, respectively. Panels E, G, and I: The effect of relative evidence (black curve) and sum evidence (orange curve) on detection decisions, confidence in yes responses, and confidence in no responses, respectively. The first 300 milliseconds of the trial are marked in yellow. Stars represent significance in a two-sided t-test for the first 300 milliseconds of the trial: \*: p<0.05, \*\*: p<0.01, \*\*\*: p<0.001.
+
+```{r RC-exp1-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-exp1-RC)"}
+
+knitr::include_graphics("figures/RC/exp1/summary.png")
+```
+
+
+Participants were significantly more likely to respond ‘yes’ when fluctuations in motion energy during the first 300 milliseconds of the trial strengthened motion energy in the true direction of motion (`r apa_print(e1$RC$signal_decision_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)D, blue curve). Critically, and in contrast to the predictions of all four models, motion energy in the opposite direction had a negative, rather than a positive effect on detection decision (`r apa_print(e1$RC$signal_decision_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)D, red curve).
+
+Confidence ratings were higher in detection ‘yes’ responses when random noise strengthened the motion energy in the true direction of motion (`r apa_print(e1$RC$signal_confidenceYes_pos300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)F, blue curve). Again, in contrast to our model predictions, motion energy in the opposite direction had a negative, rather than a positive effect on detection decisions (`r apa_print(e1$RC$signal_confidenceYes_neg300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)F, red curve).
+
+Furthermore, unlike in the discrimination task, here we found no effect of sum evidence on confidence ratings (`r apa_print(e1$RC$signal_confidenceYes_sum300$diff%>%t.test())$statistic`; see Fig. \@ref(fig:RC-exp1-RC)G, black curve). To reiterate, while detection decisions were mostly sensitive to fluctuations in motion energy toward the true direction of motion, confidence in detection ‘yes’ responses was equally sensitive to fluctuations in the true and opposite directions of motion. However, and to anticipate the results of Exp. 3 presented below, we note that this equal weighting of positive and negative evidence in detection confidence was not replicated in a subsequent experiment designed to directly test this surprising result.
+
+Finally, confidence in ‘no’ responses was independent of relative, sum, positive, and negative evidence (all p's>0.1; see Fig. 6H). 
+
+# Experiment 2
+
+In Exp. 1, we replicated previous observations of a positive evidence bias in discrimination confidence, such that confidence scaled with the total sum of evidence for both hypotheses. In contrast, in detection an effect of sum evidence was apparent for the decision, but not for the confidence kernels. Furthermore, confidence in detection ‘no’ responses was not at all affected by fluctuations in motion energy.
+
+In Exp. 2 we tested the generalizability of these findings to a different type of stimuli (flickering patches) and mode of data collection (a ~10 minute online experiment). Our pre-registered objectives (documented here: [https://osf.io/d3vkm/](https://osf.io/d3vkm/)) were 1) to replicate a positive evidence bias in discrimination confidence, 2) to replicate the absence of a positive evidence bias in detection confidence, 3) to replicate the absence of an effect of either positive or negative evidence on confidence in ‘no’ judgments.
+
+## Methods
+
+### Participants
+
+The research complied with all relevant ethical regulations, and was approved by the Research Ethics Committee of University College London (study ID number 1260/003). 147 participants were recruited via Prolific (prolific.co) and gave their informed consent prior to their participation. They were selected based on their acceptance rate (>95%) and for being native English speakers. Following our pre-registration, we aimed to collect data until we had reached 100 included participants based on our pre-specified inclusion criteria (see [https://osf.io/d3vkm/](https://osf.io/d3vkm/)). Our final data set includes observations from 102 included participants. The entire experiment took around 10 minutes to complete. Participants were paid £1.25 for their participation, equivalent to an hourly wage of £7.5.
+
+
+### Experimental paradigm
+
+The experiment was programmed using the jsPsych and P5 JavaScript packages [@de2015jspsych; @mccarthy2015p5], and was hosted on a JATOS server [@lange2015jatos]. It consisted of two tasks (Detection and Discrimination) presented in separate blocks. A total of 56 trials of each task was delivered in 2 blocks of 28 trials each. The order of experimental blocks was interleaved, starting with discrimination.
+
+The first discrimination block started after an instruction section, which included instructions about the stimuli and confidence scale, four practice trials and four confidence practice trials. Further instructions were presented before the second block. Instruction sections were followed by multiple-choice comprehension questions, to monitor participants’ understanding of the main task and confidence reporting interface. To encourage concentration, feedback was delivered at the end of the second and fourth blocks about overall performance and mean confidence in the task.
+
+Importantly, unlike the lab-based experiment, there was no calibration of difficulty for the two tasks. The rationale for this is that in Exp. 1 perceptual thresholds for motion discrimination were highly consistent across participants, and staircasing took a long time to converge. Furthermore, in Exp. 1 we aimed to control for task difficulty, but this introduced differences between the stimulus intensity in detection and discrimination. To complement our findings, here we aimed to match stimulus intensity between the two tasks, and accept that task performance might vary.
+
+### Trial structure
+
+In discrimination blocks, trial structure closely followed Exp. 2 from @zylberberg2012construction, with a few adaptations. Following a fixation cross (500 ms), two sets of four adjacent vertical gray bars were presented as a rapid serial visual presentation (RSVP; 12 frames, presented at 25Hz), displayed to the left and right of the fixation cross (see Fig. 7). On each frame, the luminance of each bar was randomly sampled from a Gaussian distribution with a standard deviation of 10/255 units in the standard RGB 0-255 coordinate system. For one set of bars, this Gaussian distribution was centered at the same luminance value as the background (128/255). For the other set, it was centered at 133/255, making it brighter on average. Participants then reported which of the two sets was brighter on average using the ‘D’ and ‘F’ keys on the keyboard. After their response, they rated their confidence on a continuous scale, by controlling the size of a colored circle with their mouse. High confidence was mapped to a big, blue circle, and low confidence to a small, red circle. To discourage hasty confidence ratings, the confidence rating scale stayed on the screen for at least 2000 milliseconds. Feedback about response accuracy was delivered after the confidence rating phase.
+
+(ref:RC-design2) Task design for Experiment 2. In both tasks, participants viewed 480 milliseconds of two flickering patches, after which they made a keyboard response to indicate which of the patches was brighter (discrimination) or whether any of the patches was brighter than the background (detection).
+
+```{r RC-design2, fig.cap="(ref:RC-design2)"}
+
+knitr::include_graphics('figures/design2.png')
+
+```
+
+Detection blocks were similar to discrimination blocks, with the exception that decisions were made about whether the average luminance of either of the two sets was brighter than the gray background, or not. In ‘different’ trials, the luminance of the four bars in one of the sets was sampled from a Gaussian distribution with mean 133/255, and the luminance of the other set from a Gaussian distribution with mean 128/255. In ‘same’ trials, the luminance of both sets was sampled from a distribution centered at 128/255. Decisions in Detection trials were reported using the ‘Y’ and ‘N’ keys. Confidence ratings and feedback were as in the discrimination task.
+
+### Randomization
+
+The order and timing of experimental events was determined pseudo-randomly by the Mersenne Twister pseudorandom number generator, initialized in a way that ensures registration time-locking [@mazor2019novel]. 
+
 
 # References
 
