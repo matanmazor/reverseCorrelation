@@ -41,9 +41,9 @@ protocol sum: c8c398e9134c072a7c73ea6a24f87079609999df2a40e52c19f94e3d98a58d2c;
 
 [relevant pre-registration lines of code](https://github.com/matanmazor/reverseCorrelation/blob/cbba2d43c2ddfb0c021ee0c15b7d5b03eddd34d8/experiments/Experiment3/webpage/main.js#L682-L692)
 
-### Exp. 3
-[protocol folder](https://github.com/matanmazor/reverseCorrelation/blob/cbba2d43c2ddfb0c021ee0c15b7d5b03eddd34d8/experiments/Experiment4/protocol_folder.zip)
+### Exp. 4
+[protocol folder](https://github.com/matanmazor/reverseCorrelation/blob/main/experiments/Experiment4/protocol_folder.zip)
 
 protocol sum: 099327c4129fd85ced7a97fd6b6e131596e3a1569f641a50435c545755342ce8
 
-[relevant pre-registration lines of code](https://github.com/matanmazor/reverseCorrelation/blob/cbba2d43c2ddfb0c021ee0c15b7d5b03eddd34d8/experiments/Experiment3/webpage/main.js#L682-L692)
+[relevant pre-registration lines of code](https://github.com/matanmazor/reverseCorrelation/blob/6d012473f41ddfc890e6f0d559b60d061b65055d/experiments/Experiment4/webpage/main.js#L806-L822)
