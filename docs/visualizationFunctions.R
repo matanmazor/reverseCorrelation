@@ -278,8 +278,114 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     theme(legend.position = 'none');
 
   ggsave(paste('./figures/RC',exp_label,'discrimination_confidence_sum_rel.png',sep='/'),
+         width=3.5,height=3);
+  
+  exp$discrimination_confidence_objective_plot <- ggplot(exp$discrimination_confidence_kernel_objective%>%
+                                                 group_by(obj_side,time, subj_id) %>%
+                                                 summarise(evidence=mean(diff)) %>%
+                                                 group_by(obj_side,time)%>%
+                                                 summarise(se=se(evidence, na.rm=T),
+                                                           evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=obj_side)) +
+    geom_hline(yintercept=0)  +
+    # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
+    #          color="transparent", fill="black") +
+    geom_line() +
+    geom_ribbon(aes(ymin = evidence-se, ymax = evidence+se, fill=obj_side),alpha=0.5) +
+    scale_color_manual(values=discrimination_colors)+
+    scale_fill_manual(values=discrimination_colors) +
+    scale_x_continuous(limits=xlim) +
+    scale_y_continuous(limits=ylim) +
+    theme_minimal()+theme(
+      axis.text.y=element_blank(),
+      axis.ticks.y=element_blank()) +
+    labs(y='evidence',
+         x='time (ms.)')+
+    theme(legend.position = 'none');
+  
+  ggsave(paste('./figures/RC',exp_label,'discrimination_confidence_objective.png',sep='/'),
+         width=3.5,height=3)
+  
+  
+  exp$discrimination_confidence_objective_sum_rel_plot <- ggplot(exp$discrimination_confidence_kernel_objective%>%
+                                                         group_by(time, subj_id) %>%
+                                                         summarise(relative_evidence=mean(diff[obj_side=='true'])-mean(diff[obj_side=='opposite']),
+                                                                   sum_evidence = mean(diff[obj_side=='true'])+mean(diff[obj_side=='opposite'])) %>%
+                                                         pivot_longer(cols=ends_with('evidence'), names_to='contrast', values_to='evidence') %>%
+                                                         group_by(contrast,time)%>%
+                                                         summarise(se=se(evidence, na.rm=T),
+                                                                   evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=contrast)) +
+    geom_hline(yintercept=0)  +
+    # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
+    #          color="transparent", fill="black") +
+    geom_line() +
+    geom_ribbon(aes(ymin = evidence-se, ymax = evidence+se, fill=contrast),alpha=0.5) +
+    scale_color_manual(values=evidence_colors)+
+    scale_fill_manual(values=evidence_colors) +
+    scale_x_continuous(limits=xlim) +
+    scale_y_continuous(limits=ylim) +
+    theme_minimal()+theme(
+      axis.text.y=element_blank(),
+      axis.ticks.y=element_blank()) +
+    labs(y='contrast',
+         x='time (ms.)')+
+    theme(legend.position = 'none');
+  
+  ggsave(paste('./figures/RC',exp_label,'discrimination_confidence_objective_sum_rel.png',sep='/'),
          width=3.5,height=3)
 
+  exp$discrimination_confidence_incorrect_plot <- ggplot(exp$discrimination_confidence_kernel_incorrect%>%
+                                                 group_by(side,time, subj_id) %>%
+                                                 summarise(evidence=mean(diff)) %>%
+                                                 group_by(side,time)%>%
+                                                 summarise(se=se(evidence, na.rm=T),
+                                                           evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=side)) +
+    geom_hline(yintercept=0)  +
+    # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
+    #          color="transparent", fill="black") +
+    geom_line() +
+    geom_ribbon(aes(ymin = evidence-se, ymax = evidence+se, fill=side),alpha=0.5) +
+    scale_color_manual(values=discrimination_colors)+
+    scale_fill_manual(values=discrimination_colors) +
+    scale_x_continuous(limits=xlim) +
+    scale_y_continuous(limits=ylim) +
+    theme_minimal()+theme(
+      axis.text.y=element_blank(),
+      axis.ticks.y=element_blank()) +
+    labs(y='evidence',
+         x='time (ms.)')+
+    theme(legend.position = 'none');
+  
+  ggsave(paste('./figures/RC',exp_label,'discrimination_confidence_incorrect.png',sep='/'),
+         width=3.5,height=3)
+  
+  
+  exp$discrimination_confidence_incorrect_sum_rel_plot <- ggplot(exp$discrimination_confidence_kernel_incorrect%>%
+                                                         group_by(time, subj_id) %>%
+                                                         summarise(relative_evidence=mean(diff[side=='chosen'])-mean(diff[side=='unchosen']),
+                                                                   sum_evidence = mean(diff[side=='chosen'])+mean(diff[side=='unchosen'])) %>%
+                                                         pivot_longer(cols=ends_with('evidence'), names_to='contrast', values_to='evidence') %>%
+                                                         group_by(contrast,time)%>%
+                                                         summarise(se=se(evidence, na.rm=T),
+                                                                   evidence=mean(evidence, na.rm=T)),aes(x=time,y=evidence,color=contrast)) +
+    geom_hline(yintercept=0)  +
+    # annotate(geom = "rect", xmin=0, xmax=300, ymin=-0.6,ymax=-0.55,
+    #          color="transparent", fill="black") +
+    geom_line() +
+    geom_ribbon(aes(ymin = evidence-se, ymax = evidence+se, fill=contrast),alpha=0.5) +
+    scale_color_manual(values=evidence_colors)+
+    scale_fill_manual(values=evidence_colors) +
+    scale_x_continuous(limits=xlim) +
+    scale_y_continuous(limits=ylim) +
+    theme_minimal()+theme(
+      axis.text.y=element_blank(),
+      axis.ticks.y=element_blank()) +
+    labs(y='contrast',
+         x='time (ms.)')+
+    theme(legend.position = 'none');
+  
+  ggsave(paste('./figures/RC',exp_label,'discrimination_confidence_incorrect_sum_rel.png',sep='/'),
+         width=3.5,height=3);
+  
   return(exp)
 }
 

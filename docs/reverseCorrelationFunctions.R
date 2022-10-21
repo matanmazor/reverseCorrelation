@@ -23,8 +23,20 @@ getDiscriminationKernels <- function(exp) {
     summarise(evidence=mean(evidence)) %>%
     group_by (subj_id,side,time,eccentricity) %>%
     summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  exp$discrimination_confidence_kernel_incorrect <- exp$discRCdf %>%
+    filter(correct==0) %>%
+    group_by (subj_id,side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=mean(evidence)) %>%
+    group_by (subj_id,side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
 
-
+  exp$discrimination_confidence_kernel_objective <- exp$discRCdf %>%
+    group_by (subj_id,obj_side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=mean(evidence)) %>%
+    group_by (subj_id,obj_side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
   return(exp)
 }
 
@@ -115,6 +127,46 @@ contrastDiscriminationKernels <- function(exp) {
     filter(time<300)%>%
     group_by(subj_id) %>%
     summarise(diff=mean(diff[side=='chosen'])+mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_pos_incorrect300 <- exp$discrimination_confidence_kernel_incorrect %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen']));
+  
+  exp$RC$confidence_neg_incorrect300 <- exp$discrimination_confidence_kernel_incorrect %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_rel_incorrect300 <- exp$discrimination_confidence_kernel_incorrect %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen'])-mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_sum_incorrect300 <- exp$discrimination_confidence_kernel_incorrect %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen'])+mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_pos_objective300 <- exp$discrimination_confidence_kernel_objective %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[obj_side=='true']));
+  
+  exp$RC$confidence_neg_objective300 <- exp$discrimination_confidence_kernel_objective %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[obj_side=='opposite']));
+  
+  exp$RC$confidence_rel_objective300 <- exp$discrimination_confidence_kernel_objective %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[obj_side=='true'])-mean(diff[obj_side=='opposite']));
+  
+  exp$RC$confidence_sum_objective300 <- exp$discrimination_confidence_kernel_objective %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[obj_side=='true'])+mean(diff[obj_side=='opposite']));
 
   return(exp)
 }
@@ -204,4 +256,46 @@ contrastDetectionSignalKernels <- function(exp) {
 
   return(exp)
 
+}
+
+
+aggregateEffects <- function(exp) {
+  
+  exp$RC$pos <- exp$RC$confidence_pos300 %>%
+    rename(discrimination_confidence=diff) %>%
+    merge(exp$RC$signal_decision_pos300 %>%
+            rename(detection_decision=diff)) %>%
+    merge(exp$RC$signal_confidenceYes_pos300 %>%
+            rename(confidence_yes=diff), by='subj_id') %>%
+    merge(exp$RC$signal_confidenceNo_pos300 %>%
+            rename(confidence_no=diff), by='subj_id')
+  
+  exp$RC$neg <- exp$RC$confidence_neg300 %>%
+    rename(discrimination_confidence=diff) %>%
+    merge(exp$RC$signal_decision_neg300 %>%
+            rename(detection_decision=diff)) %>%
+    merge(exp$RC$signal_confidenceYes_neg300 %>%
+            rename(confidence_yes=diff), by='subj_id') %>%
+    merge(exp$RC$signal_confidenceNo_neg300 %>%
+            rename(confidence_no=diff), by='subj_id')
+  
+  exp$RC$rel <- exp$RC$confidence_rel300 %>%
+    rename(discrimination_confidence=diff) %>%
+    merge(exp$RC$signal_decision_rel300 %>%
+            rename(detection_decision=diff)) %>%
+    merge(exp$RC$signal_confidenceYes_rel300 %>%
+            rename(confidence_yes=diff), by='subj_id') %>%
+    merge(exp$RC$signal_confidenceNo_rel300 %>%
+            rename(confidence_no=diff), by='subj_id')
+  
+  exp$RC$sum <- exp$RC$confidence_sum300 %>%
+    rename(discrimination_confidence=diff) %>%
+    merge(exp$RC$signal_decision_sum300 %>%
+            rename(detection_decision=diff)) %>%
+    merge(exp$RC$signal_confidenceYes_sum300 %>%
+            rename(confidence_yes=diff), by='subj_id') %>%
+    merge(exp$RC$signal_confidenceNo_sum300 %>%
+            rename(confidence_no=diff), by='subj_id')
+  
+  return(exp)
 }
