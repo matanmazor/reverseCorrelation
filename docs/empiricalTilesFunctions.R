@@ -8,7 +8,6 @@ library(ggforce);
 plotDiscByEvidence = function(exp, exp_label) {
 
   exp$discrimination_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==0)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
@@ -16,7 +15,7 @@ plotDiscByEvidence = function(exp, exp_label) {
     summarise(resp=mean(as.numeric(as.character(response))),
               correct=mean(as.numeric(as.character(correct))),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$discrimination_by_evidence_plot <- exp$discrimination_by_evidence %>%
@@ -49,7 +48,6 @@ plotDiscByEvidence = function(exp, exp_label) {
 plotDetByEvidence = function(exp, exp_label) {
 
   exp$detection_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==1)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
@@ -57,7 +55,7 @@ plotDetByEvidence = function(exp, exp_label) {
     summarise(resp=mean(as.numeric(as.character(response))),
               correct=mean(as.numeric(as.character(correct))),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$detection_by_evidence_plot <- exp$detection_by_evidence %>%
@@ -92,14 +90,13 @@ plotDetByEvidence = function(exp, exp_label) {
 plotDiscConfByEvidence = function(exp, exp_label) {
 
   exp$discrimination_confidence_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==0 & correct==1)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
     group_by(evidence_0,evidence_1)%>%
     summarise(confidence=mean(conf_bi),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$discrimination_confidence_by_evidence_plot <- exp$discrimination_confidence_by_evidence %>%
@@ -131,14 +128,13 @@ plotDiscConfByEvidence = function(exp, exp_label) {
 plotDetConfByEvidence = function(exp, exp_label) {
 
   exp$detection_confidence_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==1 & correct==1)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
     group_by(evidence_0,evidence_1)%>%
     summarise(confidence=mean(conf_bi),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$detection_confidence_by_evidence_plot <- exp$detection_confidence_by_evidence %>%
@@ -173,7 +169,6 @@ plotDetConfByEvidence = function(exp, exp_label) {
 plotDiscStimByEvidence = function(exp, exp_label) {
 
   exp$discrimination_stimulus_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==0)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
@@ -181,7 +176,7 @@ plotDiscStimByEvidence = function(exp, exp_label) {
     summarise(stim=mean(as.numeric(as.character(stimulus))),
               correct=mean(as.numeric(as.character(correct))),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$discrimination_stimulus_by_evidence_plot <- exp$discrimination_stimulus_by_evidence %>%
@@ -213,7 +208,6 @@ plotDiscStimByEvidence = function(exp, exp_label) {
 plotDetSignalByEvidence = function(exp, exp_label) {
 
   exp$detection_signal_by_evidence <- exp$trial_df %>%
-    bind_rows(e2$trial_df) %>%
     filter(detection==1)%>%
     mutate(evidence_0 = round(evidence_0*5)/5,
            evidence_1 = round(evidence_1*5)/5)%>%
@@ -221,7 +215,7 @@ plotDetSignalByEvidence = function(exp, exp_label) {
     summarise(signal=mean(as.numeric(as.character(signal))),
               correct=mean(as.numeric(as.character(correct))),
               n=n())%>%
-    filter(n>20);
+    filter(n>10);
 
 
   exp$detection_signal_by_evidence_plot <- exp$detection_signal_by_evidence %>%

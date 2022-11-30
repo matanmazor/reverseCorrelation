@@ -37,6 +37,45 @@ getDiscriminationKernels <- function(exp) {
     group_by (subj_id,obj_side,time,eccentricity) %>%
     summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
   
+  
+  ##### variance
+  exp$discrimination_accuracy_sd_kernel <- exp$discRCdf %>%
+    drop_na()%>%
+    group_by (subj_id,obj_side,time,eccentricity,correct) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by(subj_id,obj_side,time,eccentricity) %>%
+    summarise(diff_evidence=evidence[correct==1]-evidence[correct==0]) %>%
+    group_by(subj_id,time,eccentricity) %>%
+    summarise(relative_evidence = diff_evidence[obj_side=='true']-diff_evidence[obj_side=='opposite'],
+              sum_evidence = diff_evidence[obj_side=='true']+diff_evidence[obj_side=='opposite']) %>%
+    pivot_longer(cols = ends_with('evidence'), names_to='contrast',values_to='evidence');
+  
+  exp$discrimination_confidence_sd_kernel <- exp$discRCdf %>%
+    group_by (subj_id,side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by (subj_id,side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  exp$discrimination_confidence_sd_kernel_correct <- exp$discRCdf %>%
+    filter(correct==1) %>%
+    group_by (subj_id,side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by (subj_id,side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  exp$discrimination_confidence_sd_kernel_incorrect <- exp$discRCdf %>%
+    filter(correct==0) %>%
+    group_by (subj_id,side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by (subj_id,side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  exp$discrimination_confidence_sd_kernel_objective <- exp$discRCdf %>%
+    group_by (subj_id,obj_side,time,eccentricity,binaryconf) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by (subj_id,obj_side,time,eccentricity) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
   return(exp)
 }
 
@@ -51,6 +90,20 @@ getDetectionKernels <- function(exp) {
   exp$detection_confidence_kernel <- exp$detectionRCdf %>%
     group_by (subj_id,time,eccentricity,binaryconf,response) %>%
     summarise(evidence=mean(evidence)) %>%
+    group_by (subj_id,time,eccentricity,response) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  
+  #### variance
+  exp$detection_decision_sd_kernel <- exp$detectionRCdf %>%
+    group_by (subj_id,time,eccentricity, response) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by(subj_id,time,eccentricity) %>%
+    summarise(evidence=evidence[response==1]-evidence[response==0])
+  
+  exp$detection_confidence_sd_kernel <- exp$detectionRCdf %>%
+    group_by (subj_id,time,eccentricity,binaryconf,response) %>%
+    summarise(evidence=sd(evidence)) %>%
     group_by (subj_id,time,eccentricity,response) %>%
     summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
 
@@ -69,6 +122,19 @@ getDetectionSignalKernels <- function(exp) {
   exp$signal_confidence_kernel <- exp$signalRCdf %>%
     group_by (subj_id,side,time,eccentricity,binaryconf,response) %>%
     summarise(evidence=mean(evidence)) %>%
+    group_by (subj_id,side,time,eccentricity,response) %>%
+    summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
+  
+  ### variance
+  exp$signal_decision_sd_kernel <- exp$signalRCdf %>%
+    group_by (subj_id,side,time,eccentricity, response) %>%
+    summarise(evidence=sd(evidence)) %>%
+    group_by(subj_id,side,time,eccentricity) %>%
+    summarise(evidence=evidence[response==1]-evidence[response==0])
+  
+  exp$signal_confidence_sd_kernel <- exp$signalRCdf %>%
+    group_by (subj_id,side,time,eccentricity,binaryconf,response) %>%
+    summarise(evidence=sd(evidence)) %>%
     group_by (subj_id,side,time,eccentricity,response) %>%
     summarise(diff = evidence[binaryconf==1]-evidence[binaryconf==0])
 
@@ -167,9 +233,52 @@ contrastDiscriminationKernels <- function(exp) {
     filter(time<300)%>%
     group_by(subj_id) %>%
     summarise(diff=mean(diff[obj_side=='true'])+mean(diff[obj_side=='opposite']));
+  
+  exp$RC$accuracy_sd_rel300 <- exp$discrimination_accuracy_sd_kernel %>%
+    filter(time<300 & contrast=='relative_evidence')%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence));
+  
+  exp$RC$accuracy_sd_sum300 <- exp$discrimination_accuracy_sd_kernel %>%
+    filter(time<300 & contrast=='sum_evidence')%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence));
+  
+  exp$RC$confidence_sd_pos300 <- exp$discrimination_confidence_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen']));
+  
+  exp$RC$confidence_sd_neg300 <- exp$discrimination_confidence_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_sd_rel300 <- exp$discrimination_confidence_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen'])-mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_sd_sum300 <- exp$discrimination_confidence_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='chosen'])+mean(diff[side=='unchosen']));
+  
+  exp$RC$confidence_peak <- exp$discrimination_confidence_kernel %>%
+    group_by(subj_id, time) %>%
+    summarise(sum=mean(diff[side=='chosen']) +
+                mean(diff[side=='unchosen']),
+              rel = mean(diff[side=='chosen']) -
+                mean(diff[side=='unchosen'])) %>%
+    group_by(subj_id) %>%
+    summarise(peak_sum = time[which.max(sum)],
+              peak_rel = time[which.max(rel)]) %>%
+    mutate(diff=peak_sum-peak_rel);
+  
 
   return(exp)
 }
+
 
 contrastDetectionKernels <- function(exp) {
 
@@ -184,6 +293,21 @@ contrastDetectionKernels <- function(exp) {
     summarise(diff=mean(diff));
 
   exp$RC$detection_confidenceNo_sum300 <- exp$detection_confidence_kernel %>%
+    filter(time<300 & response==0)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff));
+  
+  exp$RC$detection_decision_sd_sum300 <- exp$detection_decision_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence));
+  
+  exp$RC$detection_confidenceYes_sd_sum300 <- exp$detection_confidence_sd_kernel %>%
+    filter(time<300 & response==1)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff));
+  
+  exp$RC$detection_confidenceNo_sd_sum300 <- exp$detection_confidence_sd_kernel %>%
     filter(time<300 & response==0)%>%
     group_by(subj_id) %>%
     summarise(diff=mean(diff));
@@ -250,6 +374,68 @@ contrastDetectionSignalKernels <- function(exp) {
     summarise(diff=mean(diff[side=='true'])-mean(diff[side=='opposite']));
 
   exp$RC$signal_confidenceNo_sum300 <- exp$signal_confidence_kernel %>%
+    filter(time<300 & response==0)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true'])+mean(diff[side=='opposite']));
+  
+  # variance
+  
+  exp$RC$signal_decision_sd_pos300 <- exp$signal_decision_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence[side=='true']));
+  
+  exp$RC$signal_decision_sd_neg300 <- exp$signal_decision_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence[side=='opposite']));
+  
+  exp$RC$signal_decision_sd_rel300 <- exp$signal_decision_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence[side=='true']-evidence[side=='opposite']));
+  
+  exp$RC$signal_decision_sd_sum300 <- exp$signal_decision_sd_kernel %>%
+    filter(time<300)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(evidence[side=='true']+evidence[side=='opposite']));
+  
+  exp$RC$signal_confidenceYes_sd_pos300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==1)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true']));
+  
+  exp$RC$signal_confidenceYes_sd_neg300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==1)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='opposite']));
+  
+  exp$RC$signal_confidenceYes_sd_rel300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==1)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true'])-mean(diff[side=='opposite']));
+  
+  exp$RC$signal_confidenceYes_sd_sum300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==1)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true'])+mean(diff[side=='opposite']));
+  
+  exp$RC$signal_confidenceNo_sd_pos300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==0)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true']));
+  
+  exp$RC$signal_confidenceNo_sd_neg300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==0)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='opposite']));
+  
+  exp$RC$signal_confidenceNo_sd_rel300 <- exp$signal_confidence_sd_kernel %>%
+    filter(time<300 & response==0)%>%
+    group_by(subj_id) %>%
+    summarise(diff=mean(diff[side=='true'])-mean(diff[side=='opposite']));
+  
+  exp$RC$signal_confidenceNo_sd_sum300 <- exp$signal_confidence_sd_kernel %>%
     filter(time<300 & response==0)%>%
     group_by(subj_id) %>%
     summarise(diff=mean(diff[side=='true'])+mean(diff[side=='opposite']));

@@ -199,7 +199,7 @@ plotAllAsymmetries <- function(experiment, filename) {
 # REVERSE CORRELATION VISUALIZATION #
 #####################################
 
-plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
+plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim, ylab) {
 
   exp$discrimination_accuracy_plot <- ggplot(exp$discrimination_accuracy_kernel%>%
                                               group_by(contrast,time, subj_id) %>%
@@ -216,10 +216,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -242,10 +243,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=discrimination_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -270,10 +272,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -295,10 +298,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=discrimination_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
   
@@ -323,10 +327,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
   
@@ -348,10 +353,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=discrimination_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
   
@@ -376,10 +382,11 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits=xlim) +
     scale_y_continuous(limits=ylim) +
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
   
@@ -390,7 +397,7 @@ plotDiscriminationKernels <- function(exp, exp_label, xlim, ylim) {
 }
 
 
-plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
+plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim, ylab) {
 
   exp$det_decision_plot <- ggplot(exp$signal_decision_kernel%>%
                                    group_by(side,time, subj_id) %>%
@@ -408,10 +415,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=detection_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -438,10 +446,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -465,10 +474,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=detection_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -494,10 +504,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -522,10 +533,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=detection_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='evidence',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 
@@ -552,10 +564,11 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim) {
     scale_fill_manual(values=evidence_colors) +
     scale_x_continuous(limits = xlim) +
     scale_y_continuous(limits = ylim)+
-    theme_minimal()+theme(
-      axis.text.y=element_blank(),
-      axis.ticks.y=element_blank()) +
-    labs(y='contrast',
+    theme_minimal()+
+    # theme(
+    #   axis.text.y=element_blank(),
+    #   axis.ticks.y=element_blank()) +
+    labs(y=ylab,
          x='time (ms.)')+
     theme(legend.position = 'none');
 

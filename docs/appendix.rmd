@@ -39,15 +39,15 @@ knitr::include_graphics("figures/RC-exp1-asymmetries-enhanced.png")
 
 ## zROC curves
 
-A difference in response-conditional auROC estimates can emerge from higher-order differences in metacognitive monitoring for the two responses and/or from lower-level differences in the perceptual representations of signal and noise [such as in first-order signal detection models where the signal variance is higher; @maniscalco2014signal]. Importantly, a difference can also emerge in first-order signal-detection models that assume equal variance, in the presence of a response bias or insufficient variance in confidence ratings [@mazor2021stage]. To test if the metacognitive asymmetry between 'yes' and 'no' responses could be accounted for by an equal-variance SDT model, we simulated data that was identical to our empirical data except for confidence ratings in correct responses, which were chosen to perfectly agree with the assumptions of an equal-variance SDT model given participants' decision criterion, sensitivity, and their confidence in incorrect responses. We then compared subject-wise differences between the response-conditional auROCs with the differences in this simulated dataset [@mazor2021stage]. The difference in differences was significant, indicating that the observed metacognitive asymmetry could not be accounted for by a first-order equal-variance SDT model (`r e1$AUC%>%filter(detection==1)%>%pull(metacognitive_asymmetry_control)%>%t.test()%>%apa_print()%>%'$'(full_result)`).
+A difference in response-conditional auROC2 estimates can emerge from higher-order differences in metacognitive monitoring for the two responses and/or from lower-level differences in the perceptual representations of signal and noise [such as in first-order signal detection models where the signal variance is higher; @maniscalco2014signal]. Importantly, a difference can also emerge in first-order signal-detection models that assume equal variance, in the presence of a response bias or insufficient variance in confidence ratings [@mazor2021stage]. To test if the metacognitive asymmetry between 'yes' and 'no' responses could be accounted for by an equal-variance SDT model, we simulated data that was identical to our empirical data except for confidence ratings in correct responses, which were chosen to perfectly agree with the assumptions of an equal-variance SDT model given participants' decision criterion, sensitivity, and their confidence in incorrect responses. We then compared subject-wise differences between the response-conditional auROCs with the differences in this simulated dataset [@mazor2021stage]. The difference in differences was significant, indicating that the observed metacognitive asymmetry could not be accounted for by a first-order equal-variance SDT model (`r e1$AUC%>%filter(detection==1)%>%pull(metacognitive_asymmetry_control)%>%t.test()%>%apa_print()%>%'$'(full_result)`).
 
 An asymmetry in metacognitive sensitivity for 'yes' and 'no' responses is also predicted by unequal-variance Signal Detection Theory (*uvSDT*). Specifically, if the signal distribution is wider than the noise distribution, the overlap between the distributions will be more pronounced for misses and correct rejections than for hits and false alarms, making metacognitive judgments for 'no' responses objectively more difficult. Unequal-variance SDT predicts that plotting the type-1 ROC curve in z-space (taking the inverse cumulative distribution of the confidence rating histogram) will result in a straight line with a slope equal to $\frac{\sigma_{noise}}{\sigma_{signal}}$. Because the variance of the signal distribution is higher than that of the noise distribution, zROC slopes are typically shallow, with slopes below 1.
 
 We used linear regression to estimate the slope of the zROC curve. To control for underestimation of the slope due to regression to the mean [@wickens2002elementary, 56], we fitted two regression models for the task data of each participant: one predicting $Z(h)$ based on $Z(f)$ (slope $s_1$) and one predicting $Z(f)$ based on $Z(h)$ (slope $s_2$). We then used $\frac{log(s_1)-log(s2)}{2}$ as a bias-free measure of the zROC slope. In equal-variance SDT, this value is predicted to be 0, corresponding to a slope of 1.
 
-Indeed, slopes were generally shallower than 1 for detection zROC curves (as predicted by an unequal-variance SDT model; `r  e1$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), and not significantly different from 1 for discrimination zROC curves (as predicted by equal-variance SDT; `r e1$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`).
+Detection zROC slopes were generally shallower than 1 (as predicted by an unequal-variance SDT model; `r  e1$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), and not significantly different from 1 for discrimination zROC curves (as predicted by equal-variance SDT; `r e1$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`).
 
-These results support a difference in the variance-structure of the representation of signal and noise, such that the representation of signal is more variable across trials. However, it is still possible that some of the metacognitive asymmetry in detection (the difference in auROC between 'yes' and 'no' responses) reflects additional higher-order processes that cannot be captured by a first-order signal-detection model. If this was the case, zROC curves for detection should not only be shallower, but also less linear than for discrimination, reflecting poorer fit of the signal-detection model to detection. To test if this was the case, we compared the subject-wise $R^2$ values for the detection and discrimination zROC regression lines. $R^2$ values reflect the goodness of fit of a linear model to the data. These values were similar for the two tasks (`r t.test(e1$detection_zROC$r.squared,e1$discrimination_zROC$r.squared, paired=TRUE)%>%apa_print%>%'$'(full_result)`), suggesting that a first-order SDT model accounted equally well for the data from both tasks.
+These results support a difference in the variance-structure of the representation of signal and noise, such that the representation of signal is more variable across trials. However, it is still possible that some of the metacognitive asymmetry in detection (the difference in auROC2 between 'yes' and 'no' responses) reflects additional processes that cannot be captured by a first-order signal-detection model. If this was the case, zROC curves for detection should not only be shallower, but also less linear than for discrimination, reflecting poorer fit of the signal-detection model to detection. To test if this was the case, we compared the subject-wise $R^2$ values for the detection and discrimination zROC regression lines. $R^2$ values reflect the goodness of fit of a linear model to the data. These values were similar for the two tasks (`r t.test(e1$detection_zROC$r.squared,e1$discrimination_zROC$r.squared, paired=TRUE)%>%apa_print%>%'$'(full_result)`), suggesting that a first-order SDT model accounted equally well for the data from both tasks.
 
 ## Confidence-RT correlations
 
@@ -142,7 +142,7 @@ knitr::include_graphics("figures/RC-exp3-asymmetries-enhanced.png")
 
 ## zROC curves
 
-As expected, detection zROC slopes were significantly shallower than 1  (`r e3$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), whereas discrimination zROC slopes were significantly not (`r e3$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`). Furthermore, a first-order SDT model fitted the data significantly better for the detection task than for the discrimination (difference in $R^2$ for the two tasks: `r e3$zROC_contrast_rsquare%>%pull(fit_diff)%>%t.test()%>%apa_print()%>%'$'(full_result)`). 
+As expected, detection zROC slopes were significantly shallower than 1  (`r e3$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), whereas discrimination zROC slopes were not different from 1 (`r e3$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`). Furthermore, a first-order SDT model fitted the data significantly better for the detection than for the discrimination task (difference in $R^2$ for the two tasks: `r e3$zROC_contrast_rsquare%>%pull(fit_diff)%>%t.test()%>%apa_print()%>%'$'(full_result)`). 
 
 ## Confidence-RT correlations
 
@@ -182,7 +182,7 @@ e3_st$RC <- list();
 e3_st <- e3_st %>%
   getDiscriminationKernels() %>%
   contrastDiscriminationKernels() %>%
-  plotDiscriminationKernels('exp3_standard',c(0,440),c(-0.4,0.8))
+  plotDiscriminationKernels('exp3_standard',c(0,440),c(-0.4,0.8), 'luminance (RGB units)')
 
 e3_st$signalRCdf <- e3$demeaned_df %>%
   filter(detection==1 & signal==1 & brightness_boost==0) %>%
@@ -198,7 +198,7 @@ e3_st$signalRCdf <- e3$demeaned_df %>%
 e3_st <- e3_st %>%
   getDetectionSignalKernels()%>%
   contrastDetectionSignalKernels()%>%
-  plotDetectionSignalKernels('exp3_standard',c(0,440),c(-0.4,0.7))
+  plotDetectionSignalKernels('exp3_standard',c(0,440),c(-0.4,0.7), 'luminance (RGB units)')
 
 ```
 
@@ -237,7 +237,7 @@ knitr::include_graphics("figures/RC-exp4-asymmetries-enhanced.png")
 
 ## zROC curves
 
-As expected, detection zROC slopes were significantly shallower than 1  (`r e4$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), whereas discrimination zROC slopes were significantly not (`r e4$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`). Furthermore, a first-order SDT model fitted the data significantly better for the detection than for the discrimination task (difference in $R^2$ for the two tasks: `r e4$zROC_contrast_rsquare%>%pull(fit_diff)%>%t.test()%>%apa_print()%>%'$'(full_result)`). 
+As expected, detection zROC slopes were significantly shallower than 1  (`r e4$detection_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`), whereas discrimination zROC slopes were not different from 1 (`r e4$discrimination_zROC%>%pull(logslope)%>%t.test%>%apa_print()%>%'$'(full_result)`). Furthermore, a first-order SDT model fitted the data significantly better for the detection than for the discrimination task (difference in $R^2$ for the two tasks: `r e4$zROC_contrast_rsquare%>%pull(fit_diff)%>%t.test()%>%apa_print()%>%'$'(full_result)`). 
 
 ## Confidence-RT correlations
 
@@ -277,7 +277,7 @@ e4_st$RC <- list();
 e4_st <- e4_st %>%
   getDiscriminationKernels() %>%
   contrastDiscriminationKernels() %>%
-  plotDiscriminationKernels('exp4_standard',c(0,440),c(-0.4,0.8))
+  plotDiscriminationKernels('exp4_standard',c(0,440),c(-0.4,0.8), 'luminance (RGB units)')
 
 e4_st$signalRCdf <- e4$demeaned_df %>%
   filter(detection==1 & signal==1 & normal_boost==0) %>%
@@ -293,7 +293,7 @@ e4_st$signalRCdf <- e4$demeaned_df %>%
 e4_st <- e4_st %>%
   getDetectionSignalKernels()%>%
   contrastDetectionSignalKernels()%>%
-  plotDetectionSignalKernels('exp4_standard',c(0,440),c(-0.4,0.7))
+  plotDetectionSignalKernels('exp4_standard',c(0,440),c(-0.4,0.7), 'luminance (RGB units)')
 
 ```
 
@@ -313,6 +313,197 @@ Confidence in detection 'yes' responses was similarly positively correlated with
 
 Finally, confidence in detection 'no' responses was negatively sensitive to random fluctuations in the hue of the target(`r e4_st$RC$signal_confidenceNo_pos300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`), but not the non-target stimulus (`r e4_st$RC$signal_confidenceNo_neg300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`). The overall hue of the display also affected confidence in decisions about absence (`r e4_st$RC$signal_confidenceNo_sum300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`),  without an effect for the hue difference between the two stimuli (`r e4_st$RC$signal_confidenceNo_rel300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`).
 
+
+
+# Effects of evidence on decision and confidence: Exp. 2 and 3
+
+We plotted optimal behaviour, as well as participants' responses and their confidence in correct responses, as a function of perceptual evidence in a two-dimensional representational space. First, for each trial we extracted mean luminance (minus background luminance) in the first 300 milliseconds for the right and left stimuli. These numbers were rounded to the closest integer. For each tuple of such integers, we extracted the posterior probability for stimulus category (Fig. \@ref(fig:RC-2d-empirical), top row), participants' empirical discrimination and detection decisions (middle row), and participants' subjective confidence in correct responses (bottom row). 
+
+```{r RC-2d-empirical, fig.cap="Top row: posterior probability of stimulus category given perceptual evidence for discrimination (left) and detection (right). Middle row: decision probability as a function of perceptual evidence. Bottom row: mean confidence in correct responses as a function of perceptual evidence."}
+
+knitr::include_graphics('figures/empirical_tile.png')
+
+```
+
+# Correlations betweeen detection decisions and discrimination confidence
+
+```{r compare_det_disc, echo=FALSE, cache= TRUE, message=FALSE, warning=FALSE, results='hide', fig.show='hide'}
+
+e1 <- e1 %>%
+  aggregateEffects();
+
+e2 <- e2 %>%
+  aggregateEffects()
+
+e3 <- e3 %>%
+  aggregateEffects()
+
+e4 <- e4 %>%
+  aggregateEffects()
+
+e3$all_PEBs <- e3$discrimination_conf_PEB %>%
+  rename(disc_conf=PEB) %>%
+  merge(e3$yes_conf_PEB %>%
+          rename(yes_conf=PEB)) %>%
+  merge(e3$detection_dec_PEB %>%
+          rename(det_dec=PEB)) %>%
+  merge(e3$no_conf_PEB %>%
+          rename(no_conf=PEB))
+
+e4$all_PEBs <- e4$discrimination_conf_PEB %>%
+  rename(disc_conf=PEB) %>%
+  merge(e4$yes_conf_PEB %>%
+          rename(yes_conf=PEB)) %>%
+  merge(e4$detection_dec_PEB %>%
+          rename(det_dec=PEB)) %>%
+  merge(e4$no_conf_PEB %>%
+          rename(no_conf=PEB))
+
+e1$det_disc_stats <- merge(
+  e1$detection_stats$general,
+  e1$discrimination_stats$general,
+  by='subj_id', 
+  suffix = c('_det','_dis'))
+  
+e2$det_disc_stats <- merge(
+  e2$detection_stats$general,
+  e2$discrimination_stats$general,
+  by='subj_id', 
+  suffix = c('_det','_dis'));
+
+e3$det_disc_stats <- merge(
+  e3$detection_stats$general,
+  e3$discrimination_stats$general,
+  by='subj_id', 
+  suffix = c('_det','_dis'));
+
+e4$det_disc_stats <- merge(
+  e4$detection_stats$general,
+  e4$discrimination_stats$general,
+  by='subj_id', 
+  suffix = c('_det','_dis'))
+```
+
+If discrimination confidence and detection decisions draw on shared representational resources, one may expect that subjects who report higher levels of confidence in detection will also be more likely to report target presence in detection. This was not the case in any of the four experiments (Exp. 1: `r cor.test(e1$det_disc_stats$bias_det,e1$det_disc_stats$confidence_dis)%>%apa_print()%>%'$'(full_result)`; Exp. 2: `r cor.test(e2$det_disc_stats$bias_det,e2$det_disc_stats$confidence_dis)%>%apa_print()%>%'$'(full_result)`; Exp. 3: `r cor.test(e3$det_disc_stats$bias_det,e3$det_disc_stats$confidence_dis)%>%apa_print()%>%'$'(full_result)`; Exp. 4: `r cor.test(e4$det_disc_stats$bias_det,e4$det_disc_stats$confidence_dis)%>%apa_print()%>%'$'(full_result)`).
+
+Similarly, discrimination confidence effects of the evidence boost manipulation in Exp. 3 and 4 were not correlated with detection decision effects of the same participants (Exp. 3: `r apa_print(cor.test(e3$all_PEBs$det_dec, e3$all_PEBs$disc_conf))$full_result`; Exp. 4: `r apa_print(cor.test(e4$all_PEBs$det_dec, e4$all_PEBs$disc_conf))$full_result`). 
+
+# Compuatational models
+
+## General framework
+
+### Generative model {-}
+
+Stimuli were represented as two vectors of 12 values each ${\vec{E}_l}$ and ${\vec{E}_r}$, corresponding to the two sensory channels (e.g., the right and left stimuli in Exp. 2). In the discrimination task, one sensory channel transmitted pure noise (that is, samples were centered around zero), and one channel had additional signal in it (samples were centered around a non-zero value). The signal channel was chosen randomly for each trial with equal probability. In the detection task, both sensory channels transmitted pure noise. 
+
+\begin{equation}
+  E[i] \sim \begin{cases}
+    \mathcal{N}(0.5,1), & \text{if signal}.\\
+    \mathcal{N}(0,1), & \text{if noise}.\\
+  \end{cases}
+\end{equation}
+
+On top of the presented noise, we added perceptual noise to the stimulus, resulting in a degraded representation of each sensory channel $E'$. Importantly, this additional noise affected the agent's decisions and confidence ratings, but did not affect the stimulus itself such that trial-wise estimates of stimulus energy were unaffected for the reverse correlation analysis.  The noise was channel and time specific.
+
+### Belief update {-}
+
+Agents kept track of three quantities, the log likelihood for signal in the right versus the left channels ($LLR_r$), and the log likelihood for the presence of signal in one of the channels, versus noise in both channels ($LLR_p$). Both values were set to 0 at the beginning of each trial. They were then updated from the second timepoint and on (we used the first timepoint as a control, to make sure reverse correlation analysis is not showing any effect of evidence at this timepoint). Log likelihood ratios were updated according to the following rule, where i indexes timepoint within the trial:
+
+$$
+ LLR_{r,i+1} = LLR_{r,i}+log(P_s(E'_r{i})+log(P_n(E'_l{i})) - log(P_n(E'_r{i})-log(P_s(E'_l{i}))
+$$ 
+
+and 
+
+$$ 
+LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_s(E'_r{i})P_n(E'_l{i})+p_{left}P_n(E'_r{i})P_s(E'_l{i})) - log(P_n(E'_r{i}))-log(P_n(E'_l{i}))
+$$
+where $P_s$ is the true probability density function of $E'$ values conditioned on signal being present in the channel, and $P_n$ is the true probability density function of $E'$ values conditioned on signal being absent. $p_{right}=\frac{e^{LLR_{r,i}}}{1+e^{LLR_{r,i}}}$ is the probability that the signal is in the right channel (based on all previous samples) and $p_{left}=1-p_{right}$ is the probability that the signal is in the left channel (conditioned on signal presence). Note that subjects are rationally incorporating accurate beliefs about the effect of sensory noise on evidence strength in updating their beliefs about the world state.
+
+### Decision {-}
+
+In discrimination, agents decided 'right' when $LLR_r>0$ and 'left' otherwise. In detection, agents decided 'present' when $LLR_p>0$ and 'absent' otherwise.
+
+### Confidence {-}
+
+Confidence was the probability of being correct, given an equal prior over the two world states. This equals $\frac{e^{LLR_{r}}}{1+e^{LLR_{r}}}$ in discrimination and $\frac{e^{LLR_{p}}}{1+e^{LLR_{p}}}$ in detection.
+
+## Vanilla
+
+In the vanilla model, sensory noise was sampled from $\mathcal{N}(0,2)$.
+
+A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/equal_variance.ipynb).
+
+## Stimulus-dependent noise
+
+In the stimulus-dependent noise model, sensory noise was sampled from $\mathcal{N}(0,2^{E})$.
+
+A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/unequal_variance.ipynb).
+
+## Random attention
+
+In the random attention noise model, sensory noise was sampled from $\mathcal{N}(0,2)$. However, subjects had access to only one sensory channel per timepoint. 
+
+At the beginning of each trial, one of the two channels was chosen at random with equal probability to be the preferred channel. Then, at each timepoint, one of the two channels was selected to be attended, with a $0.95$ probability of being the preferred channel. Subjects then used information from this channel only to update their beliefs. For example, upon attending the left channel:
+
+
+$$
+ LLR_{r,i+1} = LLR_{r,i}+log(P_n(E'_l{i})) - log(P_s(E'_l{i}))
+$$ 
+
+and 
+
+$$ 
+LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_n(E'_l{i})+p_{left}P_s(E'_l{i})) - log(P_n(E'_l{i}))
+$$
+
+
+A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/random_attention.ipynb).
+
+## Goal-directed attention
+
+In the goal-directed attention noise model, sensory noise was sampled from $\mathcal{N}(0,2)$. However, subjects had only access to one sensory channel per timepoint. 
+
+The probability of attending the right channel was set to $S(LLR_r)$, where $S(x)=\frac{1}{1+e^{-5x}}$. This made agents heavily biased to attend the channel that is more likely to include signal. 
+
+
+A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/goal_directed_attention.ipynb).
+
+# Time resolved decision and confidence kernels from model simulations
+
+In the main paper, qualitative model predictions were derived after averaging over timepoints. Here we include time-resolved decision and confidence kernels. As a sanity check, in these simulations agents only incorporated evidence from the second time point and on, allowing us to verify that evidence in the first timepoint has zero contribution to decision and confidence kernels. 
+
+One noteworthy pattern is that the effect of sum evidence on discrimination confidence in the goal-directed model grows over time within a trial (see Fig. \@ref(fig:RC-gda-RC)C, black curve). This is due to the fact that in this model, the probability of attending the signal channel increases with every time point, making agents increasingly blind to evidence in the non-signal channel, and increasingly sensitive to evidence in the signal channel. To quantify this effect, we contrasted the timepoints at which the relative- and sum-evidence confidence kernels peaked. Indeed, in the goal-directed attention model, the sum-evidence kernel peaked significantly later (`r gda$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`).  This was not the case in any of the other models (vanilla: `r ev$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; stimulus-dependent noise: `r uv$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; random attention: `r ra$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`).
+
+The same effect was not present in empirical kernels (Exp. 1: `r e1$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 2: `r e2$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 3: `r e3$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 4: `r e4$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`). This null result is difficult to interpret, given that the effect was not very strong in the simulation, and that its magnitude is sensitive to the steepness of the sigmoid function. We therefore do not interpret it further. 
+
+(ref:RC-ev-RC) Reverse correlation kernels derived from simulation of the vanilla model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
+
+```{r RC-ev-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-ev-RC)"}
+
+knitr::include_graphics("figures/RC/ev/RC-ev-RC.png")
+```
+
+(ref:RC-uv-RC) Reverse correlation kernels derived from simulation of the stimulus-dependent noise model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
+
+```{r RC-uv-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-uv-RC)"}
+
+knitr::include_graphics("figures/RC/uv/RC-uv-RC.png")
+```
+
+(ref:RC-gda-RC) Reverse correlation kernels derived from simulation of the guided attention model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
+
+```{r RC-gda-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-gda-RC)"}
+
+knitr::include_graphics("figures/RC/gda/RC-gda-RC.png")
+```
+
+(ref:RC-ra-RC) Reverse correlation kernels derived from simulation of the random attention model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
+
+```{r RC-ra-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-ra-RC)"}
+
+knitr::include_graphics("figures/RC/ra/RC-ra-RC.png")
+```
 
 # Pseudo-discrimination analysis {#appRC:PDRC}
 
@@ -663,9 +854,8 @@ While motion energy during the first 300 milliseconds of the trial significantly
 
 ## Exp. 2
 
-(ref:caption2) Decision and confidence pseudo-discrimination kernels, Experiment 2. Upper left: luminance in the "chosen" (green) and "unchosen" (purple) stimulus as a function of time and spatial position. Bottom left: decision kernel averaged across the four spatial positions. Upper right: confidence effects for motion energy in the "chosen" (green) and "unchosen" (purple) stimuli. Bottom right: confidence effects averaged across the four spatial positions. Shaded areas represent the the mean $\pm$ one standard error. The first 300 milliseconds of the trial are marked in yellow. 
 
-```{r ch2-exp2-PD-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap='(ref:caption2)'}
+```{r ch2-exp2-PD-RC, echo=FALSE, message=FALSE, warning=FALSE, fig.cap='Decision and confidence pseudo-discrimination kernels, Experiment 2. Upper left: luminance in the "chosen" (green) and "unchosen" (purple) stimulus as a function of time and spatial position. Bottom left: decision kernel averaged across the four spatial positions. Upper right: confidence effects for motion energy in the "chosen" (green) and "unchosen" (purple) stimuli. Bottom right: confidence effects averaged across the four spatial positions. Shaded areas represent the the mean +- one standard error. The first 300 milliseconds of the trial are marked in yellow. '}
 
 
 e2_pd = list()
@@ -854,92 +1044,3 @@ e2_pd$RC$PDconfideneUnchosenOnly300 <- e2_pd$PD_confidence_kernel %>%
 ```
 
 Similar to decision kernels in Exp. 2, random fluctuations in luminance during the first 300 milliseconds of the stimulus had a significant effect on decision (`r e2_pd$RC$PDdecision300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`). However, in Exp. 2 this analysis revealed no effect of luminance on decision confidence (`r e2_pd$RC$PDconfidence300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`), and no positive evidence bias in confidence judgments (`r e2_pd$RC$PDPEB300%>%pull(diff)%>%t.test()%>%apa_print()%>%'$'(statistic)`). 
-
-# Effects of evidence on decision and confidence: Exp. 2 and 3
-
-We plotted optimal behaviour, participants' responses, and confidence in correct responses, as a function of perceptual evidence in a two-dimensional representational space. First, for each trial we extracted mean luminance (minus background luminance) in the first 300 milliseconds for the right and left stimuli. These numbers were rounded to the closest integer. For each tuple of such integers, we extracted the posterior probability for stimulus category (Fig. \@ref(fig:RC-2d-empirical), top row), participants' empirical discrimination and detection decisions (middle row), and participants' subjective confidence in correct responses (bottom row). 
-
-```{r RC-2d-empirical, fig.cap="Top row: posterior probability of stimulus category given perceptual evidence for discrimination (left) and detection (right). Middle row: decision probability as a function of perceptual evidence. Bottom row: mean confidence in correct responses as a function of perceptual evidence."}
-
-knitr::include_graphics('figures/empirical_tile.png')
-
-```
-
-# Compuatational models
-
-## General framework
-
-### Generative model {-}
-
-Stimuli were represented as two vectors of 12 values each {\vec{E}_l} and {\vec{E}_r}, corresponding to the two sensory channels (e.g., the right and left stimuli in Exp. 2). In the discrimination task, one sensory channel transmitted pure noise (that is, samples were centered around zero), and one channel had additional signal in it (samples were centered around a non-zero value). The signal channel was chosen randomly for each trial with equal probability. In the detection task, both sensory channels transmitted pure noise. 
-
-\begin{equation}
-  E[i] \sim \begin{cases}
-    \mathcal{N}(0.5,1), & \text{if signal}.\\
-    \mathcal{N}(0,1), & \text{if noise}.\\
-  \end{cases}
-\end{equation}
-
-On top of the presented noise, we added perceptual noise to the stimulus, resulting in a degraded representation of each sensory channel $E'$. Importantly, this additional noise affected the agent's decisions and confidence ratings, but did not affect the stimulus itself such that trial-wise estimates of stimulus energy were unaffected for the reverse correlation analysis.  The noise was channel and time specific.
-
-### Belief update {-}
-
-Agents kept track of three quantities, the log likelihood for signal in the right versus the left channels ($LLR_r$), and the log likelihood for the presence of signal in one of the channels, versus noise in both channels ($LLR_p$). Both values were set to 0 at the beginning of each trial. They were then updated from the second timepoint and on (we used the first timepoint as a control, to make sure reverse correlation analysis is not showing any effect of evidence at this timepoint). Log likelihood ratios were updated according to the following rule:
-
-$$
- LLR_{r,i+1} = LLR_{r,i}+log(P_s(E'_r{i})+log(P_n(E'_l{i})) - log(P_n(E'_r{i})-log(P_s(E'_l{i}))
-$$ 
-
-and 
-
-$$ LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_s(E'_r{i})P_n(E'_l{i})+p_{left}P_n(E'_r{i})P_s(E'_l{i})) - log(P_n(E'_r{i}))-log(P_n(E'_l{i}))
-$$
-where $P_s$ is the true probability density function of $E'$ values conditioned on signal being present in the channel, and $P_n$ is the true probability density function of $E'$ values conditioned on signal being absent. $p_{right}=\frac{e^{LLR_{r,i}}}{1+e^{LLR_{r,i}}}$ is the probability that the signal is in the right channel (based on all previous samples) and $p_{left}=1-p_{right}$ is the probability that the signal is in the left channel (conditioned on signal presence). Note that subjects are rationally incorporating accurate beliefs about the effect of sensory noise on evidence strength in updating their beliefs about the world state.
-
-### Decision {-}
-
-In discrimination, agents decided 'right' when $LLR_r>0$ and 'left' otherwise. In detection, agents decided 'present' when $LLR_p>0$ and 'absent' otherwise.
-
-### Confidence {-}
-
-Confidence was the probability of being correct, given an equal prior over the two world states. This equals $\frac{e^{LLR_{r}}}{1+e^{LLR_{r}}}$ in discrimination and $\frac{e^{LLR_{p}}}{1+e^{LLR_{p}}}$ in detection.
-
-## Vanilla
-
-In the vanilla model, sensory noise was sampled from $\mathcal{N}(0,2)$.
-
-A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/equal_variance.ipynb).
-
-## Stimulus-dependent noise
-
-In the stimulus-dependent noise model, sensory noise was sampled from $\mathcal{N}(0,2^{E})$.
-
-A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/unequal_variance.ipynb).
-
-## Random attention
-
-In the random attention noise model, sensory noise was sampled from $\mathcal{N}(0,2)$. However, subjects had only access to one sensory channel per timepoint. 
-
-At the beginning of each trial, one of the two channels was chosen at random with equal probability to be the preferred channel. Then, at each timepoint, one of the two channels was selected to be attended, with a $0.95$ probability of being the preferred channel. Subjects then used information from this channel only to update their beliefs. For example, upon attending the left channel:
-
-
-$$
- LLR_{r,i+1} = LLR_{r,i}+log(P_n(E'_l{i})) - log(P_s(E'_l{i}))
-$$ 
-
-and 
-
-$$ LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_n(E'_l{i})+p_{left}P_s(E'_l{i})) - log(P_n(E'_l{i}))
-$$
-
-
-A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/random_attention.ipynb).
-
-## Goal-directed attention
-
-In the goal-directed attention noise model, sensory noise was sampled from $\mathcal{N}(0,2)$. However, subjects had only access to one sensory channel per timepoint. 
-
-The probability of attending the right channel was set to $S(LLR_r)$, where $S(x)=\frac{1}{1+e^{-5x}}$. This made agents heavily biased to attend the channel that is more likely to include signal. 
-
-
-A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/goal_directed_attention.ipynb).
