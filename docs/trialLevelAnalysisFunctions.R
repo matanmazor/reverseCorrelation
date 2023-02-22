@@ -141,6 +141,18 @@ testzROC <- function(df) {
            z_0 = qnorm(cs_0)) %>%
     ungroup()
 
+  zROC_slopes_tse <- conf_bi_counts%>%
+    group_by(subj_id) %>%
+    filter(n()>1) %>%
+    do(model=odregress(.$z_0, .$z_1)) %>%
+    rowwise() %>%
+    mutate(slope = model$coeff[1],
+           ssq = model$ssq,
+           logslope = log(slope)) %>%
+    dplyr::select('subj_id','slope','ssq','logslope') %>%
+    filter(is.finite(logslope))
+    
+    
   zROC_slopes1 <- conf_bi_counts %>%
     group_by(subj_id) %>%
     do(model=lm(z_1~z_0,data=.)) %>%
@@ -180,7 +192,7 @@ testzROC <- function(df) {
       logslope = log(slope1)/2+log(slope2)/2
     )
 
-  return(zROC_slopes)
+  return(zROC_slopes_tse)
 }
 
 testzROC2tasks <- function(e) {
