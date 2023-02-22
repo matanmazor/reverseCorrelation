@@ -1,20 +1,29 @@
 ```{r appendix-setup, include=FALSE} 
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
-library("papaja")
-library('tidyverse')
-library('broom')
-library('cowplot')
-library('MESS') # for AUCs
-library('lsr') # for effect sizes
-library('pwr') # for power calculations
-library('brms') # for mixed effects modeling
-library('BayesFactor') # for Bayesian t test
-library('jsonlite') #parsing data from sort_trial
-library('knitr')
-library('egg')
-library('zoo') # for rollapply
-library('RColorBrewer')
-library('reticulate') # for python
+
+library(groundhog)
+
+groundhog.library(
+  c(
+    'papaja',
+    'tidyverse',
+    'broom',
+    'cowplot',
+    'MESS', # for AUCs
+    'lsr', # for effect sizes
+    'pwr', # for power calculations
+    'brms', # for mixed effects modeling
+    'BayesFactor', # for Bayesian t test
+    'jsonlite', #parsing data from sort_trial
+    'knitr',
+    'egg',
+    'zoo',  # for rollapply
+    'RColorBrewer',
+    'reticulate' # for python
+  ),"2022-12-01"
+)
+
+r_refs("r-references.bib")
 ```
 
 # Additional analyses: Exp. 1
