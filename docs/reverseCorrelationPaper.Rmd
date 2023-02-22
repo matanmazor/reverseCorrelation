@@ -77,22 +77,7 @@ groundhog.library(
   ),"2022-12-01"
 )
 
-library("papaja")
 r_refs("r-references.bib")
-library('tidyverse')
-library('broom')
-library('cowplot')
-library('MESS') # for AUCs
-library('lsr') # for effect sizes
-library('pwr') # for power calculations
-library('brms') # for mixed effects modeling
-library('BayesFactor') # for Bayesian t test
-library('jsonlite') #parsing data from sort_trial
-library('knitr')
-library('egg')
-library('zoo') # for rollapply
-library('RColorBrewer')
-library('reticulate') # for python
 
 source("trialLevelAnalysisFunctions.R", local = knitr::knit_global())
 source("visualizationFunctions.R", local = knitr::knit_global())
@@ -489,39 +474,39 @@ sim$discrimination_confidence_kernel%>%
   ggsave(paste('./figures/RC/sim/detection_conf_no_sum_rel.png',sep='/'),
          width=3.5,height=3)
   
-  ev = list();
-  
-  ev$df <- sim$df %>%
-    filter(eccentricity=='ev') %>%
-    mutate(correct = ifelse(correct,1,0),
-           RT=1000,
-           logRT=log(1000),
-           trial_number = trial_id,
-           response=decision,
-           conf_bi = ifelse(
-              response==1, 
-              as.numeric(confidence),
-              -1*as.numeric(confidence))) %>%
-    group_by(subj_id)%>%
-    mutate(conf_discrete=ntile(confidence,20) %>%
-      factor(levels=1:21))
-  
-  ev$trial_df <- ev$df %>%
-    filter(timepoint==1);
-  
-  ev$detection_df <- ev$trial_df %>%
-    filter(detection==1) %>%
-    mutate(stimulus=signal);
-  
-  ev$discrimination_df <- ev$trial_df %>%
-    filter(detection==0)%>%
-    mutate(stimulus=bright_side);
-  
-  ev <- ev %>% 
-  generalStats2Tasks() %>%
-  testAUC() %>%
-  testzROC2tasks() %>%
-  plotAllAsymmetries('figures/RC-ev-asymmetries.pdf');
+  # ev = list();
+  # 
+  # ev$df <- sim$df %>%
+  #   filter(eccentricity=='ev') %>%
+  #   mutate(correct = ifelse(correct,1,0),
+  #          RT=1000,
+  #          logRT=log(1000),
+  #          trial_number = trial_id,
+  #          response=decision,
+  #          conf_bi = ifelse(
+  #             response==1, 
+  #             as.numeric(confidence),
+  #             -1*as.numeric(confidence))) %>%
+  #   group_by(subj_id)%>%
+  #   mutate(conf_discrete=ntile(confidence,20) %>%
+  #     factor(levels=1:21))
+  # 
+  # ev$trial_df <- ev$df %>%
+  #   filter(timepoint==1);
+  # 
+  # ev$detection_df <- ev$trial_df %>%
+  #   filter(detection==1) %>%
+  #   mutate(stimulus=signal);
+  # 
+  # ev$discrimination_df <- ev$trial_df %>%
+  #   filter(detection==0)%>%
+  #   mutate(stimulus=bright_side);
+  # 
+  # ev <- ev %>% 
+  # generalStats2Tasks() %>%
+  # testAUC() %>%
+  # testzROC2tasks() %>%
+  # plotAllAsymmetries('figures/RC-ev-asymmetries.pdf');
   
   
   analyzeSimTrials<- function(simulation,simulation_label) {
@@ -601,8 +586,8 @@ sim$discrimination_confidence_kernel%>%
     contrastDiscriminationKernels() %>%
     getDetectionSignalKernels() %>%
     contrastDetectionSignalKernels() %>% 
-    plotDiscriminationKernels(simulation_label,c(0,13),c(-0.4,0.5)) %>%
-    plotDetectionSignalKernels(simulation_label, c(0,13),c(-0.4,0.5))
+    plotDiscriminationKernels(simulation_label,c(0,13),c(-0.4,0.5),'') %>%
+    plotDetectionSignalKernels(simulation_label, c(0,13),c(-0.4,0.5),'')
 
   
   return(simulation)
