@@ -55,17 +55,27 @@ appendix          : appendix.rmd
 ---
 
 ```{r RC_load_pkgs, echo=FALSE, message=FALSE, include=FALSE}
-# List of packages required for this analysis
-pkg <- c("dplyr", "ggplot2", "knitr", "bookdown")
-# Check if packages are not installed and assign the
-# names of the packages not installed to the variable new.pkg
-new.pkg <- pkg[!(pkg %in% installed.packages())]
-# If there are any packages in the list that aren't installed,
-# install them
-if (length(new.pkg)) {
-  install.packages(new.pkg, repos = "https://cran.rstudio.com")
-}
-# Load packages
+library(groundhog)
+
+groundhog.library(
+  c(
+    'papaja',
+    'tidyverse',
+    'broom',
+    'cowplot',
+    'MESS', # for AUCs
+    'lsr', # for effect sizes
+    'pwr', # for power calculations
+    'brms', # for mixed effects modeling
+    'BayesFactor', # for Bayesian t test
+    'jsonlite', #parsing data from sort_trial
+    'knitr',
+    'egg',
+    'zoo',  # for rollapply
+    'RColorBrewer',
+    'reticulate' # for python
+  ),"2022-12-01"
+)
 
 library("papaja")
 r_refs("r-references.bib")
