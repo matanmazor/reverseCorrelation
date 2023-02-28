@@ -141,16 +141,16 @@ testzROC <- function(df) {
            z_0 = qnorm(cs_0)) %>%
     ungroup()
 
-  zROC_slopes_tse <- conf_bi_counts%>%
+  zROC_slopes_tse <- conf_bi_counts%>% #total least squares
     group_by(subj_id) %>%
     filter(n()>1) %>%
     do(model=odregress(.$z_0, .$z_1)) %>%
     rowwise() %>%
-    mutate(slope = model$coeff[1],
-           ssq = model$ssq,
-           logslope = log(slope)) %>%
-    dplyr::select('subj_id','slope','ssq','logslope') %>%
-    filter(is.finite(logslope))
+    mutate(slope_tse = model$coeff[1],
+           ssq_tse = model$ssq,
+           logslope_tse = log(slope_tse)) %>%
+    dplyr::select('subj_id','slope_tse','ssq_tse','logslope_tse') %>%
+    filter(is.finite(logslope_tse))
     
     
   zROC_slopes1 <- conf_bi_counts %>%
@@ -190,9 +190,10 @@ testzROC <- function(df) {
     rowwise()%>%
     mutate(
       logslope = log(slope1)/2+log(slope2)/2
-    )
+    ) %>%
+    merge(zROC_slopes_tse, by='subj_id')
 
-  return(zROC_slopes_tse)
+  return(zROC_slopes)
 }
 
 testzROC2tasks <- function(e) {

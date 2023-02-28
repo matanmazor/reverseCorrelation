@@ -415,13 +415,13 @@ On top of the presented noise, we added perceptual noise to the stimulus, result
 Agents kept track of three quantities, the log likelihood for signal in the right versus the left channels ($LLR_r$), and the log likelihood for the presence of signal in one of the channels, versus noise in both channels ($LLR_p$). Both values were set to 0 at the beginning of each trial. They were then updated from the second timepoint and on (we used the first timepoint as a control, to make sure reverse correlation analysis is not showing any effect of evidence at this timepoint). Log likelihood ratios were updated according to the following rule, where i indexes timepoint within the trial:
 
 $$
- LLR_{r,i+1} = LLR_{r,i}+log(P_s(E'_r{i})+log(P_n(E'_l{i})) - log(P_n(E'_r{i})-log(P_s(E'_l{i}))
+ LLR_{r,i+1} = LLR_{r,i}+log(P_s(E'_{r,i}))+log(P_n(E'_{l,i})) - log(P_n(E'_{r,i}))-log(P_s(E'_{l,i}))
 $$
 
 and
 
 $$ 
-LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_s(E'_r{i})P_n(E'_l{i})+p_{left}P_n(E'_r{i})P_s(E'_l{i})) - log(P_n(E'_r{i}))-log(P_n(E'_l{i}))
+LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_s(E'_{r,i})P_n(E'_{l,i})+p_{left}P_n(E'_{r,i})P_s(E'_{l,i})) - log(P_n(E'_{r,i}))-log(P_n(E'_{l,i}))
 $$ where $P_s$ is the true probability density function of $E'$ values conditioned on signal being present in the channel, and $P_n$ is the true probability density function of $E'$ values conditioned on signal being absent. $p_{right}=\frac{e^{LLR_{r,i}}}{1+e^{LLR_{r,i}}}$ is the probability that the signal is in the right channel (based on all previous samples) and $p_{left}=1-p_{right}$ is the probability that the signal is in the left channel (conditioned on signal presence). Note that subjects are rationally incorporating accurate beliefs about the effect of sensory noise on evidence strength in updating their beliefs about the world state.
 
 ### Decision {.unnumbered}
@@ -438,11 +438,11 @@ In the vanilla model, sensory noise was sampled from $\mathcal{N}(0,2)$.
 
 A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/equal_variance.ipynb).
 
-## Stimulus-dependent noise
+## Firing rate
 
-In the stimulus-dependent noise model, sensory noise was sampled from $\mathcal{N}(0,2^{E})$.
+In the firing rate model, sensory samples were sampled from $Pois(max(0,20E))$.
 
-A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/unequal_variance.ipynb).
+A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/poisson_noise.ipynb).
 
 ## Random attention
 
@@ -451,13 +451,13 @@ In the random attention noise model, sensory noise was sampled from $\mathcal{N}
 At the beginning of each trial, one of the two channels was chosen at random with equal probability to be the preferred channel. Then, at each timepoint, one of the two channels was selected to be attended, with a $0.95$ probability of being the preferred channel. Subjects then used information from this channel only to update their beliefs. For example, upon attending the left channel:
 
 $$
- LLR_{r,i+1} = LLR_{r,i}+log(P_n(E'_l{i})) - log(P_s(E'_l{i}))
+ LLR_{r,i+1} = LLR_{r,i}+log(P_n(E'_{l,i})) - log(P_s(E'_{l,i}))
 $$
 
 and
 
 $$ 
-LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_n(E'_l{i})+p_{left}P_s(E'_l{i})) - log(P_n(E'_l{i}))
+LLR_{p,i+1} = LLR_{p,i} + log(p_{right}P_n(E'_{l,i})+p_{left}P_s(E'_{l,i})) - log(P_n(E'_{l,i}))
 $$
 
 A python simulation is available [in the project's GitHub](https://github.com/matanmazor/reverseCorrelation/blob/main/simulations/random_attention.ipynb).
@@ -474,7 +474,7 @@ A python simulation is available [in the project's GitHub](https://github.com/ma
 
 In the main paper, qualitative model predictions were derived after averaging over timepoints. Here we include time-resolved decision and confidence kernels. As a sanity check, in these simulations agents only incorporated evidence from the second time point and on, allowing us to verify that evidence in the first timepoint has zero contribution to decision and confidence kernels.
 
-One noteworthy pattern is that the effect of sum evidence on discrimination confidence in the goal-directed model grows over time within a trial (see Fig. \@ref(fig:RC-gda-RC)C, black curve). This is due to the fact that in this model, the probability of attending the signal channel increases with every time point, making agents increasingly blind to evidence in the non-signal channel, and increasingly sensitive to evidence in the signal channel. To quantify this effect, we contrasted the timepoints at which the relative- and sum-evidence confidence kernels peaked. Indeed, in the goal-directed attention model, the sum-evidence kernel peaked significantly later (`r gda$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`). This was not the case in any of the other models (vanilla: `r ev$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; stimulus-dependent noise: `r uv$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; random attention: `r ra$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`).
+One noteworthy pattern is that the effect of sum evidence on discrimination confidence in the goal-directed model grows over time within a trial (see Fig. \@ref(fig:RC-gda-RC)C, black curve). This is due to the fact that in this model, the probability of attending the signal channel increases with every time point, making agents increasingly blind to evidence in the non-signal channel, and increasingly sensitive to evidence in the signal channel. To quantify this effect, we contrasted the timepoints at which the relative- and sum-evidence confidence kernels peaked. Indeed, in the goal-directed attention model, the sum-evidence kernel peaked significantly later (`r gda$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`). This was not the case in any of the other models (vanilla: `r ev$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; firing rate: `r fr$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; random attention: `r ra$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`).
 
 The same effect was not present in empirical kernels (Exp. 1: `r e1$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 2: `r e2$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 3: `r e3$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`; Exp. 4: `r e4$RC$confidence_peak$diff%>%t.test()%>%apa_print()%>%'$'(statistic)`). This null result is difficult to interpret, given that the effect was not very strong in the simulation, and that its magnitude is sensitive to the steepness of the sigmoid function. We therefore do not interpret it further.
 
@@ -485,11 +485,11 @@ The same effect was not present in empirical kernels (Exp. 1: `r e1$RC$confidenc
 knitr::include_graphics("figures/RC/ev/RC-ev-RC.png")
 ```
 
-(ref:RC-uv-RC) Reverse correlation kernels derived from simulation of the stimulus-dependent noise model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
+(ref:RC-fr-RC) Reverse correlation kernels derived from simulation of the firing rate model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).
 
-```{r RC-uv-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-uv-RC)"}
+```{r RC-fr-RC, echo=FALSE, message=FALSE, fig.cap="(ref:RC-fr-RC)"}
 
-knitr::include_graphics("figures/RC/uv/RC-uv-RC.png")
+knitr::include_graphics("figures/RC/fr/RC-fr-RC.png")
 ```
 
 (ref:RC-gda-RC) Reverse correlation kernels derived from simulation of the guided attention model. Same conventions as Fig. \@ref(fig:RC-exp1-RC).

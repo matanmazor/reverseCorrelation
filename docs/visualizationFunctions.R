@@ -518,7 +518,7 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim, ylab) {
 
   exp$conf_no_plot <- ggplot(exp$signal_confidence_kernel%>%
                                 filter(response==0)%>%
-                                group_by(subj_id,side,time) %>%
+                                group_by(subj_id,side,time, .drop=F) %>%
                                 summarise(evidence=mean(diff)) %>%
                                 group_by(side,time) %>%
                                 summarise(se=se(evidence),
@@ -551,7 +551,7 @@ plotDetectionSignalKernels <- function(exp, exp_label, xlim, ylim, ylab) {
                                         summarise(rel_evidence=mean(diff[side=='true'])-mean(diff[side=='opposite']),
                                                   sum_evidence = mean(diff[side=='true'])+mean(diff[side=='opposite'])) %>%
                                         pivot_longer(cols = ends_with('evidence'),names_to='contrast',values_to='evidence')%>%
-                                        group_by(contrast,time) %>%
+                                        group_by(contrast,time, .drop=F) %>%
                                         summarise(se=se(evidence),
                                                   evidence=mean(evidence)),
                                       aes(x=time,y=evidence,color=contrast)) +
