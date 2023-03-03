@@ -7,7 +7,7 @@
 Raw data from all four experiments is available on the project's OSF repository: [https://osf.io/7a4fm/](https://osf.io/7a4fm/)
 
 ## Analysis Scripts
-Analysis scripts (in R) are available in the ['docs'](https://github.com/matanmazor/reverseCorrelation/blob/main/docs/reverseCorrelationPaper.Rmd) subdirectory.
+A fully reproducible data-to-paper code (in R and Rmarkdown) is available in the ['docs'](https://github.com/matanmazor/reverseCorrelation/blob/main/docs/reverseCorrelationPaper.Rmd) subdirectory.
 
 ## Experiment demos
 
